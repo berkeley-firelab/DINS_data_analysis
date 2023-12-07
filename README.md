@@ -9,7 +9,11 @@ This repository contains scripts for data preprocessing and preparation, organiz
 * The primary workflow for data preprocessing can be found in the "data_pre-processing" directory.
 * Feature Importance and SHAP analysis scripts are available in the "FI_and_SHAP_final" directory.
 
+## Workflow Types
+Two types of workflows are provided:
 
+* ipyn: Jupyter Notebook-based workflow.
+* py: Python script-based workflow.
 
 
 
