@@ -6,7 +6,6 @@ This repository contains scripts for data preprocessing and preparation, organiz
 ## data
 
 * `dins` 2017-2022: This is the original dataset containing string values.
-* `df`: The final data frame with integer values.
 * `WUI_fires`: This directory contains pre-processed and original datasets for five WUI fires with NaN values. 
 
 ## dins and WUI datasets dictionary 
@@ -44,4 +43,3 @@ Two types of workflows are provided:
 
 * `ipyn`: Jupyter Notebook-based workflow.
 * `py`: Python script-based workflow.
-
