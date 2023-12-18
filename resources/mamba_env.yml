@@ -1,0 +1,38 @@
+name: dins-proj
+
+dependencies:
+  ## specify desired version if needed
+  - python
+  - pip
+  - ipykernel
+  - jupyter
+  - jupyterlab
+  - jupyterlab-lsp
+  - pandoc
+  - pandocfilters
+  - python-language-server
+  - nodejs
+
+  - numpy 
+  - pandas
+  - scipy
+  - scikit-image
+  - scikit-learn
+  - matplotlib 
+  - seaborn
+  - colorcet
+  - shap
+  - xgboost
+  - imbalanced-learn
+  - statsmodels
+
+# geospatial libraries
+  - gdal
+  - rasterio
+  - shapely
+  - geopandas
+
+  - pip:
+  # tensorflow
+    - tensorflow
+    - tensorflow-metal
