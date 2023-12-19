@@ -1,7 +1,7 @@
 import os
 
 # directory structure
-CU_DIR = os.path.curdir
+CU_DIR = os.path.dirname(__file__)
 PROJ_DIR = os.path.join(CU_DIR, "..")
 PROJ_DIR = os.path.abspath(PROJ_DIR)
 
