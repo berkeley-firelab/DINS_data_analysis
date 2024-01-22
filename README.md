@@ -34,16 +34,16 @@ In addition to the `dins` variables, we also have `VSD`, `EMBER`, and `FLAME` fo
 
 ## dins and WUI datasets dictionary 
 ### `dins`
-* `DAMAGE`: ['Inaccessible'= NaN, 'No Damage'= 0, 'Affected (1-9%)'= 1, 'Minor (10-25%)'= 1, 'Major (26-50%)'= 1, 'Destroyed (>50%)'= 2]
-* `ROOFCONSTR (ROOFCONSTRUCTION)`: ['Unknown'=NaN, 'Fire Resistant' =0, 'Metal' =0, 'Concrete' =0, 'Tile' =1, 'Asphalt' =2, 'Other' =3, 'Wood' =4, 'Combustible' =4]
-* `EXTERIORSI (EXTERIORSIDING)`: ['Unknown' =NaN, 'Metal' =0, 'Stucco Brick Cement' =1, 'Stucco/Brick/Cement' =1, 'Ignition Resistant' =0, 'Fire Resistant' =0, 'Vinyl' =2, 'Other' =3, 'Combustible' =4,'Wood' =4]
-* `WINDOWPANE`: ['Unknown' =NaN, 'No Windows' =0, 'Single Pane' =1, 'Multi Pane' =2]
-* `EAVES`: ['Unknown' =NaN, 'Not Applicable' =0, 'No Eaves' =1, 'Unenclosed' =2, ‘'Enclosed' =3]
-* `VENTSCREEN`: ['Unknown' =NaN, 'Screened' =0, 'Mesh Screen <= 1/8"' =1, 'Mesh Screen > 1/8"' =2, 'Unscreened' =3, 'No Vents' =4]
-* `DECKPORCHO (DECK/PORCH ON GRADE)`: ['Unknown' = NaN, 'No Deck/Porch' =0, 'Masonry/Concrete' =1, 'Composite' =2, 'Wood' =3]
-* `DECKPORCHE (DECKPORCHELEVATED)`: ['Unknown' = NaN, 'No Deck/Porch' =0, 'Masonry/Concrete' =1, 'Composite' =2, 'Wood' =3]
-* `PATIOCOVER (PATIOCOVERCARPORT)`: ['Unknown' = NaN, 'No Patio Cover/Carport' =0, 'Non Combustible' =1, 'Combustible' = 2]
-* `FENCEATTAC (FENCEATTACHEDTOSTRUCTURE)`:['Unknown' = NaN, 'No Fence' =0, 'Non Combustible' =1, 'Combustible' =2]
+* `DAMAGE`: ['Inaccessible', 'No Damage', 'Affected (1-9%)', 'Minor (10-25%)', 'Major (26-50%)', 'Destroyed (>50%)']
+* `ROOFCONSTR (ROOFCONSTRUCTION)`: ['Unknown', 'Fire Resistant', 'Metal', 'Concrete', 'Tile', 'Asphalt', 'Other', 'Wood', 'Combustible']
+* `EXTERIORSI (EXTERIORSIDING)`: ['Unknown', 'Metal', 'Stucco Brick Cement', 'Stucco/Brick/Cement', 'Ignition Resistant', 'Fire Resistant', 'Vinyl', 'Other', 'Combustible','Wood']
+* `WINDOWPANE`: ['Unknown', No Windows', 'Single Pane', 'Multi Pane']
+* `EAVES`: ['Unknown', 'Not Applicable', 'No Eaves', 'Unenclosed', ‘'Enclosed']
+* `VENTSCREEN`: ['Unknown', 'Screened', 'Mesh Screen <= 1/8"', 'Mesh Screen > 1/8"', 'Unscreened', 'No Vents']
+* `DECKPORCHO (DECK/PORCH ON GRADE)`: ['Unknown', 'No Deck/Porch', 'Masonry/Concrete', 'Composite', 'Wood']
+* `DECKPORCHE (DECKPORCHELEVATED)`: ['Unknown', 'No Deck/Porch', 'Masonry/Concrete', 'Composite', 'Wood']
+* `PATIOCOVER (PATIOCOVERCARPORT)`: ['Unknown', 'No Patio Cover/Carport', 'Non Combustible', 'Combustible']
+* `FENCEATTAC (FENCEATTACHEDTOSTRUCTURE)`:['Unknown', 'No Fence', 'Non Combustible', 'Combustible']
 * `Distance`: Structure Separation Distance (feet), Using the building footprints data set, the distance from one structure to its nearest neighboring structure is measured with the QGIS tools.
 * `YEARBUILT`: Year that primary structure in parcel was constructed
 
