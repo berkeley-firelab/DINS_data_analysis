@@ -20,7 +20,7 @@ This repository contains scripts for data preprocessing and preparation, organiz
 * `DECKPORCHE (DECKPORCHELEVATED)`: ['Unknown', 'No Deck/Porch', 'Masonry/Concrete', 'Composite', 'Wood']
 * `PATIOCOVER (PATIOCOVERCARPORT)`: ['Unknown', 'No Patio Cover/Carport', 'Non Combustible', 'Combustible']
 * `FENCEATTAC (FENCEATTACHEDTOSTRUCTURE)`:['Unknown', 'No Fence', 'Non Combustible', 'Combustible']
-* `Distance`: Structure Separation Distance (SSD) in feet, Using the building footprints data set, the distance from one structure to its nearest neighboring structure is measured with the QGIS tools.
+* `Distance`: Structure Separation Distance (SSD) in *feet*, Using the building footprints data set, the distance from one structure to its nearest neighboring structure is measured with the QGIS tools.
 * `YEARBUILT`: Year that primary structure in parcel was constructed
 
 ### `WUI fires`
