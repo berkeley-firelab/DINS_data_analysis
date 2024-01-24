@@ -9,7 +9,8 @@ This repository contains scripts for data preprocessing and preparation, organiz
 * `WUI_fires`: This directory contains pre-processed and original datasets for five WUI fires with NaN values. 
 
 ## dins and WUI datasets dictionary 
-### `dins`
+### Categorical Variables: `DAMAGE`, `ROOFCONSTR`, `EXTERIORSI`, `WINDOWPANE`, `EAVES`, `VENTSCREEN`, `DECKPORCHO`, `DECKPORCHE`, `PATIOCOVER`, `FENCEATTAC`, `VSD`
+#### `dins`
 * `DAMAGE`: ['Inaccessible', 'No Damage', 'Affected (1-9%)', 'Minor (10-25%)', 'Major (26-50%)', 'Destroyed (>50%)']
 * `ROOFCONSTR (ROOFCONSTRUCTION)`: ['Unknown', 'Fire Resistant', 'Metal', 'Concrete', 'Tile', 'Asphalt', 'Other', 'Wood', 'Combustible']
 * `EXTERIORSI (EXTERIORSIDING)`: ['Unknown', 'Metal', 'Stucco Brick Cement', 'Stucco/Brick/Cement', 'Ignition Resistant', 'Fire Resistant', 'Vinyl', 'Other', 'Combustible','Wood']
@@ -24,7 +25,7 @@ This repository contains scripts for data preprocessing and preparation, organiz
 * `YEARBUILT`: Year that primary structure in parcel was constructed
 * `ZIPCODE`: Zip Code
 
-### `WUI fires`
+#### `WUI fires`
 In addition to the `dins` variables, we also have `VSD`, `Ember`, and `Flame` for our WUI fires:
 * `VSD`: Vegetation Separation Distance or Defensible Space is the minimum distance measured from a structure to surrounding vegetation (Through an airborn LiDAR data for Sonoma County as well as Aerial/Street View Imagery). Zone 0= (0-5ft), Zone 1= (5-30ft), Zone 2= (30-100ft), and +100ft 
 
