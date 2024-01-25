@@ -9,8 +9,8 @@ This repository contains scripts for data preprocessing and preparation, organiz
 * `WUI_fires`: This directory contains pre-processed and original datasets for five WUI fires with NaN values. 
 
 ## dins and WUI datasets dictionary 
-### Categorical Variables: `DAMAGE`, `ROOFCONSTRUCTION`, `EXTERIORSIDING`, `WINDOWPANE`, `EAVES`, `VENTSCREEN`, `DECK/PORCH ON GRADE`, `DECKPORCHELEVATED`, `PATIOCOVER`, `FENCE`, `VSD`
-### Numerical Variables: `Distance`, `YEARBUILT`, `ZIPCODE`, `EMBER`, `FLAME`
+#### Categorical Variables: `DAMAGE`, `ROOFCONSTRUCTION`, `EXTERIORSIDING`, `WINDOWPANE`, `EAVES`, `VENTSCREEN`, `DECK/PORCH ON GRADE`, `DECKPORCHELEVATED`, `PATIOCOVER`, `FENCE`, `VSD`
+#### Numerical Variables: `Distance`, `YEARBUILT`, `ZIPCODE`, `EMBER`, `FLAME`
 #### `dins`
 * `DAMAGE`: ['Inaccessible', 'No Damage', 'Affected (1-9%)', 'Minor (10-25%)', 'Major (26-50%)', 'Destroyed (>50%)']
 * `ROOFCONSTRUCTION`: ['Unknown', 'Fire Resistant', 'Metal', 'Concrete', 'Tile', 'Asphalt', 'Other', 'Wood', 'Combustible']
