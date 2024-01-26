@@ -32,7 +32,6 @@ def latlon_to_utm(row):
     :param lon: lon in degree
     :return: easting, northing, and utm zone
     """    
-    # TODO: vetorize and apply at the start of data analysis; makes everything easier
     
     lat, lon = row["LATITUDE"], row["LONGITUDE"]
 
