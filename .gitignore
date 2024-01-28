@@ -1,4 +1,7 @@
+# files to be excluded
 **/.DS_Store
 **/__pycache__
 **/*.pkl
 
+# folders to be excluded
+**/__pycache__
