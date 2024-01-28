@@ -1,13 +1,9 @@
 # files to be excluded
 **/.DS_Store
-<<<<<<< HEAD
-**/__pycache__
-**/*.pkl
-=======
 **/exploration.py 
 **/at_old_work.ipynb
->>>>>>> b6d7fb4 (Dev starts!)
 
 # folders to be excluded
 **/__pycache__
 **/*.ipynb_checkpoints/
+**/.virtual_documents/

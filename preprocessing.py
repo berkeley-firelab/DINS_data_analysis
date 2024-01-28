@@ -1,10 +1,6 @@
 import os
-import sys
-import glob
 import numpy as np
 import pandas as pd
-import matplotlib as mpl
-import matplotlib.pyplot as plt 
 
 
 # ML related imports
@@ -117,3 +113,5 @@ def haversine_nearest_dist_imputer(data, var="YEARBUILT"):
     df_nan.iloc[:, 2] = df_ref.iloc[idx, 2].values
     
     return df_ref, df_nan
+
+
