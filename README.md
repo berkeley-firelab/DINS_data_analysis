@@ -85,3 +85,50 @@ Two types of workflows are provided:
 
 * `ipyn`: Jupyter Notebook-based workflow.
 * `py`: Python script-based workflow.
+
+# Adopted data processing
+
+The steps for data preprocessing are as follows:
+
+1. Separate the data into train and test cases with 20% going to the test set.
+2. Design imputation strategies, train and apply them to the train set, and fit to the test set.
+To enable the use of a variety of models:
+    - Normalize the numerical variables
+    - Conduct `OneHotEncoding` on categorical variables
+4. Resample to make the representation of all classes equal to in the train set.
+5. If necessary do a `PCA` conversion
+6. Put all steps into a pipeline under one function
+
+## Imputation strategies
+
+The strategy differs for each type of `categorical` and `numerical` feature and even within each category
+
+*DINS*: Adopted strategy for features with missing values in samples,
+
+- `ROOFCONSTRUCTION`  has `82817` non-null objects: Nearest neighbor imputation.
+- `EAVES` has `82741` non-null objects: Nearest neighbor imputation.
+- `VENTSCREEN` has `82692` non-null objects: Nearest neighbor imputation.
+- `EXTERIORSIDING` has`82800` non-null objects: Nearest neighbor imputation.
+- `WINDOWPANE` has `82732` non-null objects: Nearest neighbor imputation.
+- `DECKPORCHONGRADE` has `70291` non-null objects: Nearest neighbor imputation.
+- `DECKPORCHELEVATED` has `70290` non-null objects: Nearest neighbor imputation.
+- `PATIOCOVER` has `70286` non-null objects: Nearest neighbor imputation.
+- `FENCE` has `70289` non-null objects: Nearest neighbor imputation.
+- `YEARBUILT` has `53075` non-null objects: Nearest neighbor imputation.
+
+*Wildfire cases*: Adopted strategy for features with missing values in samples,
+
+- `ZIPCODE` has `15` non-null floats: Reverse geo-encoding can be used if this is useful. Potentially for future studies. 
+- `ROOFCONSTR` has `19318`  non-null samples: Nearest neighbor imputation
+- `EAVES` has `19318`  non-null samples: Nearest neighbor imputation
+- `VENTSCREEN` has `19318`  non-null samples: Nearest neighbor imputation
+- `EXTERIORSI` has `19318`  non-null samples: Nearest neighbor imputation
+- `WINDOWPANE` has `19318`  non-null samples: Nearest neighbor imputation
+- `DECKPORCHO` has `19318`  non-null samples: Nearest neighbor imputation
+- `DECKPORCHE` has `19318`  non-null samples: Nearest neighbor imputation
+- `PATIOCOVER` has `19318`  non-null samples: Nearest neighbor imputation
+- `FENCEATTAC` has `19317`  non-null samples: Nearest neighbor imputation
+- `YEARBUILT ` has `22501`  non-null samples: Nearest neighbor imputation or median
+- `VSD` has `3504 ` non-null  samples: Aggregate (mean, median, etc)
+- `EMBER` has `11549`  non-null samples: Aggregate (mean, median, etc) potentially with KNN
+- `FLAME` has `14578`  non-null samples: Aggregate (mean, median, etc) potentially with KNN 
