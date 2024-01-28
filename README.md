@@ -3,7 +3,7 @@
 
 This repository contains scripts for data preprocessing and preparation, organized under the "data_pre-processing" workflow. Additionally, the Feature Importance and SHAP analysis scripts are located in the "FI_and_SHAP_final" directory.
 
-## Data
+## data
 
 * `dins` 2017-2022: This is the original dataset containing string values.
 * `WUI_fires`: This directory contains pre-processed and original datasets for five WUI fires with NaN values. 
