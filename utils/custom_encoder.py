@@ -6,7 +6,7 @@ from sklearn.preprocessing import OneHotEncoder
 from utils.directory_structure import OUTPUT_DIR
 
 
-"""a class for multi-column imputation"""
+"""a class for multi-column encoding"""
 
 class categorical_to_numerical():
     """does multi-column imputation for each categorical column

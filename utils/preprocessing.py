@@ -17,11 +17,7 @@ from sklearn.metrics.pairwise import haversine_distances, pairwise_distances
 from utils.directory_structure import DATA_DIR
 
 
-from IPython import embed
-
-##-----------------------------------------------
-## Helper functions for abstracting the steps
-##-----------------------------------------------
+"""functions for abstracting the steps"""
 
 
 def latlon_to_utm(row):
