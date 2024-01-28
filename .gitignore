@@ -1,7 +1,5 @@
 # files to be excluded
 **/.DS_Store
-**/exploration.py 
-**/at_old_work.ipynb
 **/*.pkl
 
 # folders to be excluded
