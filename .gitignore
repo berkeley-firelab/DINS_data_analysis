@@ -2,6 +2,7 @@
 **/.DS_Store
 **/exploration.py 
 **/at_old_work.ipynb
+**/*.pkl
 
 # folders to be excluded
 **/__pycache__

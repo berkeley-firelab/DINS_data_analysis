@@ -9,16 +9,15 @@ from pyproj import Transformer
 
 
 # ML related imports
-from scipy.stats import mode
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import pairwise_distances_argmin
-from sklearn.metrics.pairwise import haversine_distances
+from sklearn.metrics.pairwise import haversine_distances, pairwise_distances
 
 
 # AT utility imports
 from utils.directory_structure import DATA_DIR
 
 
+from IPython import embed
 
 ##-----------------------------------------------
 ## Helper functions for abstracting the steps
@@ -81,7 +80,8 @@ def read_split(data_file_name, utm=True):
     """    
 
     file_path = os.path.join(DATA_DIR, data_file_name)
-    df = pd.read_csv(file_path, delimiter=",")
+    missing_values = ["", "NA", "na", "n/a", "N/A", "--", "nan"]
+    df = pd.read_csv(file_path, delimiter=",", na_values=missing_values)
 
     # dropping distance_meter
     df.drop("distance_meter", axis=1, inplace=True)
@@ -102,53 +102,6 @@ def read_split(data_file_name, utm=True):
     return X_train_full, X_test, y_train_full, y_test, (num_cols, cat_cols)
 
 
-def haversine_dist_imputer(df, var="YEARBUILT"):
-    """
-    Imputes the missing values in var feature of the dataframe (df)
-    using the closest Haversine distance based on the location data
-
-    :param df: pandas dataframe of the features 
-    :param var: string of the feature (variable) name, defaults to "YEARBUILT"
-    :return: pandas dataframes of the reference and imputed data
-    """
-
-    df = df[["LATITUDE", "LONGITUDE", var]].copy()
-    df.replace('NaN', np.nan, inplace=True)
-    
-    df_nan = df[df[var].isna()]
-    df_ref = df[~df[var].isna()]
-    del df
-    
-    for i in range(df_nan.shape[0]):
-        dist_matrix = haversine_distances(df_ref.iloc[:, :2].values, df_nan.iloc[i, :2].values.reshape(1, 2))
-        idx = np.argpartition(dist_matrix.reshape(-1), 2)[1]
-        df_nan.iloc[i, 2] = df_ref.iloc[idx, 2]
-
-    return df_ref, df_nan
-
-
-def haversine_nearest_dist_imputer(data, var="YEARBUILT"):
-    """A faster version of the location based imputer
-    using nearest neighbor distance
-
-    :param data: pandas dataframe of the data that includes lat, lon, var in exactly this order
-    :param var: variable that has NaN or missing values, defaults to "YEARBUILT"
-    :return: pandas dataframes of the reference and imputed data 
-    """    
-    
-    df = data.copy()
-    df = df[["LATITUDE", "LONGITUDE", var]]
-    df.replace('NaN', np.nan, inplace=True)
-        
-    df_nan = df[df[var].isna()]
-    df_ref = df[~df[var].isna()]
-
-    idx = pairwise_distances_argmin(df_nan.iloc[:, :2].values, df_ref.iloc[:, :2].values, metric='haversine')
-    df_nan.iloc[:, 2] = df_ref.iloc[idx, 2].values
-    
-    return df_ref, df_nan
-
-
 def haversine_imputer_catnum(df, var="YEARBUILT", n_neighbors=5, is_categorical=False):
     """
     Imputes the missing values in var feature of the dataframe (df)
@@ -159,16 +112,6 @@ def haversine_imputer_catnum(df, var="YEARBUILT", n_neighbors=5, is_categorical=
     :param n_neighbors: number of nearest neighbors to consider for imputation
     :param is_categorical: boolean indicating if the variable is categorical
     :return: pandas dataframe with imputed data
-
-
-    TODO: add based on the np.take_along_axis method similar to below:
-
-    dist_matrix = haversine_distances(df_nan.iloc[:, :2], df_ref.iloc[:, :2])
-    k = 2
-
-    idx_k_smallest = np.argpartition(dist_matrix, k, axis=1)[:, :k]
-    k_smallest_vals = np.take_along_axis(dist_matrix, idx_k_smallest, axis=1)
-    k_smallest_vals    
     """
 
 
@@ -190,15 +133,59 @@ def haversine_imputer_catnum(df, var="YEARBUILT", n_neighbors=5, is_categorical=
     # impute missing values
     for i, idxs in enumerate(nearest_idxs):
         if is_categorical:
-            # Use mode (most frequent value) for categorical data
-            imputed_value = mode(df_ref.iloc[idxs][var])[0][0]
+            # mode (most frequent value) for categorical data
+            imputed_value = df_ref.iloc[idxs][var].mode()[0]
         else:
-            # Use mean for numerical data
+            # mean for numerical data
             imputed_value = df_ref.iloc[idxs][var].mean()
         
         df_nan.iloc[i, df_nan.columns.get_loc(var)] = imputed_value
 
-    # Combine the dataframes back
     df_imputed = pd.concat([df_ref, df_nan])
 
     return df_imputed
+
+
+def pairwise_dist_imputer_catnum(data, nan_cols, n_neighbors=5, metric="euclidean"):
+    """
+    
+
+    :param df: pandas dataframe of the features 
+    :param nan_cols: a list of feature (variable) names (in string) that have nan or missing values
+    :param n_neighbors: number of nearest neighbors to consider for imputation
+    :param metric: method for calculating the matrix distance based on UTM projections
+    :return: pandas dataframe with imputed data
+    """
+
+
+    df = data.copy()
+
+    num_cols = df.select_dtypes(include=['float64', 'int64']).columns.to_list()
+    cat_cols = df.select_dtypes(include=['object', 'category']).columns.to_list()
+
+    for c in nan_cols:
+        df_nan = df[df[c].isna()]
+        df_ref = df[~df[c].isna()]
+        df_nan_idx = df_nan.index
+        
+        dist_matrix = pairwise_distances(df_nan.loc[:, ("utm_easting", "utm_northing")].values, 
+                                         df_ref.loc[:, ("utm_easting", "utm_northing")].values, 
+                                         metric=metric, n_jobs=-1)
+        nearest_idxs = np.argpartition(dist_matrix, n_neighbors, axis=1)[:, :n_neighbors]
+
+        if c in cat_cols:
+            for i, idx in enumerate(nearest_idxs):
+                agg_value = df_ref.iloc[idx][c].mode()[0]
+                df_nan.iloc[i, df_nan.columns.get_loc(c)] = agg_value
+
+        elif c in num_cols:
+            for i, idx in enumerate(nearest_idxs): 
+                agg_value = df_ref.iloc[idx][c].mean()
+                df_nan.iloc[i, df_nan.columns.get_loc(c)] = agg_value
+
+        else:
+            print(c, " ---> Data type is not valid!")
+
+        df.loc[df_nan_idx, c] = df_nan.loc[df_nan_idx, c]
+
+    return df
