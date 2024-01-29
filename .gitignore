@@ -6,3 +6,4 @@
 **/__pycache__
 **/*.ipynb_checkpoints/
 **/.virtual_documents/
+**/opti_lib/

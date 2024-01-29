@@ -1,4 +1,5 @@
 import os
+import pickle
 import numpy as np
 import pandas as pd
 
@@ -11,11 +12,14 @@ from pyproj import Transformer
 # ML related imports
 from sklearn.model_selection import train_test_split
 from sklearn.metrics.pairwise import haversine_distances, pairwise_distances
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 
 # AT utility imports
-from utils.directory_structure import DATA_DIR
+from utils.directory_structure import DATA_DIR, OUTPUT_DIR
+from utils.custom_encoder import custom_categorical_encoder
 
+from IPython import embed
 
 """functions for abstracting the steps"""
 
@@ -66,7 +70,7 @@ def data_spliter(dataframe, test_size=0.2, target_label="DAMAGE"):
     return X_train, X_test, y_train, y_test
 
 
-def read_split(data_file_name, utm=True):
+def read_feature_engineer_split(data_file_name, x_eng=True):
     """reads the data from CSV file, does minor edits, and
     separates based on class balances in the dataset.
 
@@ -85,9 +89,13 @@ def read_split(data_file_name, utm=True):
     # converting YEARBUILT to a numeric column in the main dataset 
     df["YEARBUILT"] = pd.to_numeric(df["YEARBUILT"].values, errors="coerce")
 
+    # dropping samples with YEARBUILT less than 1800!
+    df = df[df["YEARBUILT"] >= 1800]
+
     # adding UTM coordinate and zone for potential imputation methods
-    if utm:
+    if x_eng:
         df[["utm_easting", "utm_northing", "utm_zone"]] = df.apply(latlon_to_utm, axis=1)
+        df = feature_engineering(df, cols_drop=["DISTANCE"])
 
     # identify the numerical and categorical data types
     num_cols = df.select_dtypes(include=['float64', 'int64']).columns
@@ -144,7 +152,7 @@ def haversine_imputer_catnum(df, var="YEARBUILT", n_neighbors=5, is_categorical=
 
 def pairwise_dist_imputer_catnum(data, nan_cols, n_neighbors=5, metric="euclidean"):
     """
-    
+    conducts imputation based on pairwise distance clustering in UTM projection 
 
     :param df: pandas dataframe of the features 
     :param nan_cols: a list of feature (variable) names (in string) that have nan or missing values
@@ -185,3 +193,110 @@ def pairwise_dist_imputer_catnum(data, nan_cols, n_neighbors=5, metric="euclidea
         df.loc[df_nan_idx, c] = df_nan.loc[df_nan_idx, c]
 
     return df
+
+
+def latlon_to_xyz(df):
+    """converting lat, lon, alt to x, y, z coordinates
+    this is a minor feature engineering to enable the
+    use of data for a variety of ML models, in particular 
+    the ones that need a Standard feature set.
+
+    Method:
+        x = math.cos(phi) * math.cos(theta) * rho
+        y = math.cos(phi) * math.sin(theta) * rho
+        z = math.sin(phi) * rho # z is 'up'
+    
+        where phi = lat, theta = lon
+
+    Since there is no elevation and the numerics will be 
+    normalized, rho = 1.
+
+    :param data: pandas dataframe of the entire dataset
+    """
+
+    data = df.copy()
+    data["X"] = np.cos(data["LATITUDE"].values) * np.cos(data["LONGITUDE"].values)
+    data["Y"] = np.cos(data["LATITUDE"].values) * np.sin(data["LONGITUDE"].values)
+    data["Z"] = np.sin(data["LATITUDE"].values)
+
+    return data
+
+
+def feature_engineering(X, cols_drop=None):
+    """minor feature engineering on the dataset
+
+    :param X: pandas dataframe of the features 
+    :return: pandas dataframe of the features + processed/added ones
+    """
+
+
+    df = X.copy()
+
+    # convert (lat, lon) to xyz
+    df = latlon_to_xyz(df)    
+
+    # nonlinear transformation of distance (provides a better PDF)
+    df["SSD"] = np.log10(df["DISTANCE"] * 0.3048 + 1)
+
+    if cols_drop:
+        df.drop(cols_drop, axis=1, inplace=True)
+
+    return df
+
+
+def data_preprocessing_pipeline(case_name, new_features=False, scale_data=True):
+    """
+    1. read and feature engineer data, split in train test
+    2. impute the missing values for both categorical and numerical    
+    3. scale and normalize the selected numerical features
+    4. encoding the categorical variables in X and y
+    """
+
+
+    fname = os.path.join(OUTPUT_DIR, f"{case_name}_train_test_vars.pkl")
+    if new_features:
+        # step 1. 
+        print("Reading, feature engineering, and split between train and test")
+        X_train_full, X_test, y_train_full, y_test, _ = read_feature_engineer_split(f"{case_name}.csv")
+
+        # step 2. 
+        print("Imputation based on location information")
+        X_train_nan_cols = X_train_full.columns[X_train_full.isna().any()].tolist()
+        X_train_full = pairwise_dist_imputer_catnum(X_train_full, nan_cols=X_train_nan_cols)
+        
+        X_test_nan_cols = X_test.columns[X_test.isna().any()].tolist()
+        X_test = pairwise_dist_imputer_catnum(X_test, nan_cols=X_test_nan_cols)      
+
+        # step 3. 
+        print("Encoding")
+        X_encoder = custom_categorical_encoder()
+        X_train_encoded = X_encoder.fit_transform(X_train_full)
+        X_test_encoded  = X_encoder.transform(X_test)
+
+        y_encoder = OneHotEncoder(dtype=np.float64, sparse_output=False)
+        y_train_encoded = y_encoder.fit_transform(y_train_full.values.reshape(-1, 1))
+        y_test_encoded  = y_encoder.transform(y_test.values.reshape(-1, 1))
+
+        # step 4.
+        cols_drop  = ["LATITUDE", "LONGITUDE", "utm_easting", "utm_northing", "utm_zone", "YEARBUILT", "SSD"]
+        cols_scale = ["YEARBUILT", "SSD"]
+        if scale_data:
+            print("Normalize the required features and drop extra information!")
+            scaler = StandardScaler()
+            X_train_encoded[["year_scaled", "ssd_scaled"]] = scaler.fit_transform(X_train_encoded[cols_scale])
+            X_test_encoded[["year_scaled", "ssd_scaled"]] = scaler.transform(X_test_encoded[cols_scale])
+            X_train_encoded.drop(cols_drop, axis=1, inplace=True)
+            X_test_encoded.drop(cols_drop, axis=1, inplace=True)
+        else:
+            pass
+
+        data_dict = {"X_train": X_train_encoded, "X_test": X_test_encoded, 
+                        "y_train": y_train_encoded, "y_test": y_test_encoded}
+        
+        with open(fname, 'wb') as file:
+            pickle.dump(data_dict, file)
+    else:
+        with open(fname, 'rb') as file:
+            data_dict = pickle.load(file)
+
+    return data_dict
