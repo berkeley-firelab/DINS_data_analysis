@@ -1,0 +1,9 @@
+# files to be excluded
+**/.DS_Store
+**/*.pkl
+
+# folders to be excluded
+**/__pycache__
+**/*.ipynb_checkpoints/
+**/.virtual_documents/
+**/opti_lib/
