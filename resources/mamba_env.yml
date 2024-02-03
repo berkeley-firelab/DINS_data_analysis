@@ -2,7 +2,7 @@ name: dins-proj
 
 dependencies:
   ## specify desired version if needed
-  - python
+  - python=3.10
   - pip
   - ipykernel
   - jupyter
@@ -15,16 +15,19 @@ dependencies:
 
   - numpy 
   - pandas
+  - pyarrow
   - scipy
   - scikit-image
   - scikit-learn
   - matplotlib 
+  - plotly
   - seaborn
   - colorcet
   - shap
   - xgboost
   - imbalanced-learn
   - statsmodels
+  - catboost
 
 # geospatial libraries
   - gdal
