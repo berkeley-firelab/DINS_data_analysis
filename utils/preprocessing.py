@@ -13,11 +13,13 @@ from pyproj import Transformer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics.pairwise import haversine_distances, pairwise_distances
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from imblearn.combine import SMOTETomek
+from imblearn.over_sampling import KMeansSMOTE
 
 
 # AT utility imports
 from utils.directory_structure import DATA_DIR, OUTPUT_DIR
-from utils.custom_encoder import custom_categorical_encoder
+from utils.custom_encoder import categorical_to_numerical
 
 from IPython import embed
 
@@ -244,19 +246,27 @@ def feature_engineering(X, cols_drop=None):
     return df
 
 
-def data_preprocessing_pipeline(case_name, new_features=False, scale_data=True):
-    """
-    1. read and feature engineer data, split in train test
-    2. impute the missing values for both categorical and numerical    
-    3. scale and normalize the selected numerical features
-    4. encoding the categorical variables in X and y
-    """
 
 
-    fname = os.path.join(OUTPUT_DIR, f"{case_name}_train_test_vars.pkl")
+def data_preprocessing_pipeline(case_name, new_features=False, encode_data=True, scale_data=True):
+    """_summary_
+
+    :param case_name: _description_
+    :param new_features: _description_, defaults to False
+    :param encode_data: _description_, defaults to True
+    :param scale_data: _description_, defaults to True
+    :return: _description_
+    """
+
+    if encode_data:
+        fname = os.path.join(OUTPUT_DIR, f"{case_name}_train_test_ml_ready_data.pkl")
+    else:
+        fname = os.path.join(OUTPUT_DIR, f"{case_name}_train_test_catboost_ready_data.pkl")
+
+    col_processor = categorical_to_numerical()
     if new_features:
         # step 1. 
-        print("Reading, feature engineering, and split between train and test")
+        print("Read, feature engineer, and split between train and test")
         X_train_full, X_test, y_train_full, y_test, _ = read_feature_engineer_split(f"{case_name}.csv")
 
         # step 2. 
@@ -267,15 +277,37 @@ def data_preprocessing_pipeline(case_name, new_features=False, scale_data=True):
         X_test_nan_cols = X_test.columns[X_test.isna().any()].tolist()
         X_test = pairwise_dist_imputer_catnum(X_test, nan_cols=X_test_nan_cols)      
 
-        # step 3. 
-        print("Encoding")
-        X_encoder = custom_categorical_encoder()
-        X_train_encoded = X_encoder.fit_transform(X_train_full)
-        X_test_encoded  = X_encoder.transform(X_test)
+        if encode_data:
+            # step 3. 
+            print("Encoding")
+            X_encoder = OneHotEncoder(dtype=np.float64, sparse_output=False)
+            X_train_cat, X_train_num = col_processor.separate_to_cat_num(X_train_full)        
+            X_test_cat, X_test_num = col_processor.separate_to_cat_num(X_test)
 
-        y_encoder = OneHotEncoder(dtype=np.float64, sparse_output=False)
-        y_train_encoded = y_encoder.fit_transform(y_train_full.values.reshape(-1, 1))
-        y_test_encoded  = y_encoder.transform(y_test.values.reshape(-1, 1))
+            X_train_cat_encoded = X_encoder.fit_transform(X_train_cat)
+            X_test_cat_encoded  = X_encoder.transform(X_test_cat)
+            X_train_cat_encoded = pd.DataFrame(X_train_cat_encoded, columns=X_encoder.get_feature_names_out().tolist(), index=X_train_full.index)
+            X_test_cat_encoded = pd.DataFrame(X_test_cat_encoded, columns=X_encoder.get_feature_names_out().tolist(), index=X_test.index)
+            X_train_encoded = X_train_num.join(X_train_cat_encoded)
+            X_test_encoded = X_test_num.join(X_test_cat_encoded)
+
+            y_encoder = OneHotEncoder(dtype=np.float64, sparse_output=False)
+            y_train_encoded = y_encoder.fit_transform(y_train_full.values.reshape(-1, 1))
+            y_test_encoded  = y_encoder.transform(y_test.values.reshape(-1, 1))
+            y_col_name = [y_train_full.name+"_"+c.split("_")[1] for c in y_encoder.get_feature_names_out().tolist()]
+            y_train_encoded = pd.DataFrame(y_train_encoded, columns=y_col_name, index=y_train_full.index)
+            y_test_encoded = pd.DataFrame(y_test_encoded, columns=y_col_name, index=y_test.index)
+        else:
+            print("No encoding for the features!")
+            X_train_encoded = X_train_full
+            X_test_encoded = X_test
+            y_encoder = OneHotEncoder(dtype=np.float64, sparse_output=False)
+            y_train_encoded = y_encoder.fit_transform(y_train_full.values.reshape(-1, 1))
+            y_test_encoded  = y_encoder.transform(y_test.values.reshape(-1, 1))
+            y_col_name = [y_train_full.name+"_"+c.split("_")[1] for c in y_encoder.get_feature_names_out().tolist()]
+            y_train_encoded = pd.DataFrame(y_train_encoded, columns=y_col_name, index=y_train_full.index)
+            y_test_encoded = pd.DataFrame(y_test_encoded, columns=y_col_name, index=y_test.index)
+
 
         # step 4.
         cols_drop  = ["LATITUDE", "LONGITUDE", "utm_easting", "utm_northing", "utm_zone", "YEARBUILT", "SSD"]
@@ -289,9 +321,15 @@ def data_preprocessing_pipeline(case_name, new_features=False, scale_data=True):
             X_test_encoded.drop(cols_drop, axis=1, inplace=True)
         else:
             pass
-
-        data_dict = {"X_train": X_train_encoded, "X_test": X_test_encoded, 
-                        "y_train": y_train_encoded, "y_test": y_test_encoded}
+        
+        if encode_data:
+            data_dict = {"X_train": X_train_encoded, "X_test": X_test_encoded, 
+                         "y_train": y_train_encoded, "y_test": y_test_encoded,
+                         "X_encoder": X_encoder, "y_encoder": y_encoder}
+        else:
+            data_dict = {"X_train": X_train_encoded, "X_test": X_test_encoded, 
+                         "y_train": y_train_encoded, "y_test": y_test_encoded, 
+                         "y_encoder": y_encoder}
         
         with open(fname, 'wb') as file:
             pickle.dump(data_dict, file)
