@@ -23,8 +23,9 @@ with open(os.path.join(DATA_DIR, "dins_estimator_params.json")) as f:
     est_dict = json.load(f)
 
 if est_dict["MIXED_TYPE"] is True:
-    ENCODE_DATA  = False
     FEATURE_TYPE = "mixed"
+else:
+    FEATURE_TYPE = "numeric"
 
 MODEL_TYPE = est_dict["MODEL_TYPE"]
 MODEL_VERSION = est_dict["MODEL_VERSION"]
