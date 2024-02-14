@@ -28,6 +28,12 @@ dependencies:
   - statsmodels
   - catboost
 
+# HPC
+  - cython
+  - numba
+  - dask
+  - cudatoolkit
+
 # geospatial libraries
   - gdal
   - rasterio
@@ -36,4 +42,4 @@ dependencies:
 
   - pip:
   # tensorflow
-    - tensorflow
+    - tensorflow[and-cuda]
