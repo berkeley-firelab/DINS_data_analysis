@@ -2,12 +2,11 @@ name: dins-proj
 
 dependencies:
   ## specify desired version if needed
-  - python=3.10
+  - python
   - pip
   - ipykernel
   - jupyter
   - jupyterlab
-  - jupyterlab-lsp
   - pandoc
   - pandocfilters
   - python-language-server
@@ -38,4 +37,3 @@ dependencies:
   - pip:
   # tensorflow
     - tensorflow
-    - tensorflow-metal
