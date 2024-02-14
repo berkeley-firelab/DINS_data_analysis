@@ -28,6 +28,7 @@ if __name__ == "__main__":
                            k_neighbors=est_dict["K_NS"], 
                            mixed_features=est_dict["MIXED_TYPE"])
     
-    # clf = logit_model(X, y)
+    clf = logit_model(X, y)
+    
     embed()
 
