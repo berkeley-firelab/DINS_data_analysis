@@ -12,9 +12,9 @@ from pyproj import Transformer
 # ML related imports
 from sklearn.model_selection import train_test_split
 from sklearn.metrics.pairwise import haversine_distances, pairwise_distances
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import OneHotEncoder, StandardScaler, LabelEncoder
 from imblearn.combine import SMOTETomek
-from imblearn.over_sampling import KMeansSMOTE
+from imblearn.over_sampling import SMOTEN
 
 
 # AT utility imports
@@ -248,7 +248,7 @@ def feature_engineering(X, cols_drop=None):
 
 
 
-def data_preprocessing_pipeline(case_name, new_features=False, encode_data=True, scale_data=True):
+def data_preprocessing_pipeline(case_name, new_features=False, encode_data=True, scale_data=True, weighted_classes=False):
     """_summary_
 
     :param case_name: _description_
@@ -257,11 +257,15 @@ def data_preprocessing_pipeline(case_name, new_features=False, encode_data=True,
     :param scale_data: _description_, defaults to True
     :return: _description_
     """
+    if weighted_classes is True:
+        postfix_name = "lbe_targets"
+    else:
+        postfix_name = "ohe_targets"
 
     if encode_data:
-        fname = os.path.join(OUTPUT_DIR, f"{case_name}_train_test_ml_ready_data.pkl")
+        fname = os.path.join(OUTPUT_DIR, f"{case_name}_{postfix_name}_train_test_ml_ready_data.pkl")
     else:
-        fname = os.path.join(OUTPUT_DIR, f"{case_name}_train_test_catboost_ready_data.pkl")
+        fname = os.path.join(OUTPUT_DIR, f"{case_name}_{postfix_name}_train_test_catboost_ready_data.pkl")
 
     col_processor = categorical_to_numerical()
     if new_features:
@@ -291,16 +295,20 @@ def data_preprocessing_pipeline(case_name, new_features=False, encode_data=True,
             X_train_encoded = X_train_num.join(X_train_cat_encoded)
             X_test_encoded = X_test_num.join(X_test_cat_encoded)
 
-            y_encoder = OneHotEncoder(dtype=np.float64, sparse_output=False)
-            y_train_encoded = y_encoder.fit_transform(y_train_full.values.reshape(-1, 1))
-            y_test_encoded  = y_encoder.transform(y_test.values.reshape(-1, 1))
-            y_col_name = [y_train_full.name+"_"+c.split("_")[1] for c in y_encoder.get_feature_names_out().tolist()]
-            y_train_encoded = pd.DataFrame(y_train_encoded, columns=y_col_name, index=y_train_full.index)
-            y_test_encoded = pd.DataFrame(y_test_encoded, columns=y_col_name, index=y_test.index)
         else:
             print("No encoding for the features!")
             X_train_encoded = X_train_full
             X_test_encoded = X_test
+
+        # step 4. encoding vs labeling (depending on whether classes have weights)
+        if weighted_classes is True:
+            y_encoder = LabelEncoder()
+            y_train_encoded = y_encoder.fit_transform(y_train_full.values.ravel())
+            y_test_encoded = y_encoder.transform(y_test.values.ravel())
+            y_train_encoded = pd.DataFrame(y_train_encoded, columns=["DAMAGE"], index=y_train_full.index)
+            y_test_encoded = pd.DataFrame(y_test_encoded, columns=["DAMAGE"], index=y_test.index)
+
+        else:
             y_encoder = OneHotEncoder(dtype=np.float64, sparse_output=False)
             y_train_encoded = y_encoder.fit_transform(y_train_full.values.reshape(-1, 1))
             y_test_encoded  = y_encoder.transform(y_test.values.reshape(-1, 1))
@@ -308,8 +316,7 @@ def data_preprocessing_pipeline(case_name, new_features=False, encode_data=True,
             y_train_encoded = pd.DataFrame(y_train_encoded, columns=y_col_name, index=y_train_full.index)
             y_test_encoded = pd.DataFrame(y_test_encoded, columns=y_col_name, index=y_test.index)
 
-
-        # step 4.
+        # step 5.
         cols_drop  = ["LATITUDE", "LONGITUDE", "utm_easting", "utm_northing", "utm_zone", "YEARBUILT", "SSD"]
         cols_scale = ["YEARBUILT", "SSD"]
         if scale_data:
@@ -338,3 +345,33 @@ def data_preprocessing_pipeline(case_name, new_features=False, encode_data=True,
             data_dict = pickle.load(file)
 
     return data_dict
+
+
+def balance_classes(X, y, strategy="auto", k_neighbors=10, mixed_features=False):
+    """resample to balance class representation in dataset
+
+    :param X: a dataframe of features
+    :param y: a dataframe of target classes which can be encoded 
+    :param strategy: sampling strategy, defaults to "auto"
+    :param k_neighbors: number of neighboring points, defaults to 10
+    :param mixed_features: boolean determining whether the features X
+    are only numiercal or mix of numerical and categorical, defaults to False
+    :return: _description_
+    """
+
+    X = X.copy()
+    y = y.copy()
+    y_cols = y.columns.tolist()
+
+    if mixed_features is True:
+        crs = SMOTEN(sampling_strategy=strategy, random_state=2001, k_neighbors=k_neighbors, n_jobs=-1)
+    else:
+        crs = SMOTETomek(sampling_strategy=strategy, random_state=1991, n_jobs=-1)
+
+    X_train, y_train = crs.fit_resample(X, y.values)
+    y_train = pd.DataFrame(y_train, columns=y_cols, index=X_train.index)
+
+    return X_train, y_train
+
+
+

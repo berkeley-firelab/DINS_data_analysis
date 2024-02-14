@@ -1,0 +1,10 @@
+{
+    "DATA_CASE" : "dins_2017_2022",
+    "MIXED_TYPE" : true,
+    "NEW_FEATURES" : false,
+    "SCALE_DATA" : true,
+    "BALANCE_STRATEGY" : "auto",
+    "K_NS" : 10,
+    "MODEL_TYPE": "logit",
+    "MODEL_VERSION": "v0"
+}
