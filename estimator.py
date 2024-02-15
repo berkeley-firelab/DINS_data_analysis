@@ -35,7 +35,6 @@ if not os.path.exists(MODEL_DIR):
 
 
 ML_MODEL_NAME = "{}_{}_using_{}_features.pkl".format(MODEL_TYPE, MODEL_VERSION, FEATURE_TYPE)
-print(ML_MODEL_NAME)
 SAVE_NAME = os.path.join(MODEL_DIR, ML_MODEL_NAME)
 
 

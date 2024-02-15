@@ -176,7 +176,7 @@ def pairwise_dist_imputer_catnum(data, nan_cols, n_neighbors=5, metric="euclidea
         
         dist_matrix = pairwise_distances(df_nan.loc[:, ("utm_easting", "utm_northing")].values, 
                                          df_ref.loc[:, ("utm_easting", "utm_northing")].values, 
-                                         metric=metric, n_jobs=-1)
+                                         metric=metric, n_jobs=10)
         nearest_idxs = np.argpartition(dist_matrix, n_neighbors, axis=1)[:, :n_neighbors]
 
         if c in cat_cols:
