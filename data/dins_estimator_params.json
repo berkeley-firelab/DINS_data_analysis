@@ -2,7 +2,7 @@
     "DATA_CASE" : "dins_2017_2022",
     "MIXED_TYPE" : false,
     "GENERATE_PKL_DATA" : true,
-    "ENCODE_DATA": true,
+    "ENCODE_DATA": false,
     "SCALE_DATA" : true,
     "WEIGHTED_CLASSES": true,
     "BALANCE_STRATEGY" : "auto",

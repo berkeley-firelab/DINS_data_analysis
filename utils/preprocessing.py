@@ -2,7 +2,7 @@ import os
 import pickle
 import numpy as np
 import pandas as pd
-
+import swifter
 
 # Geospatial imports
 import pyproj
@@ -96,7 +96,7 @@ def read_feature_engineer_split(data_file_name, x_eng=True):
 
     # adding UTM coordinate and zone for potential imputation methods
     if x_eng:
-        df[["utm_easting", "utm_northing", "utm_zone"]] = df.apply(latlon_to_utm, axis=1)
+        df[["utm_easting", "utm_northing", "utm_zone"]] = df.swifter.apply(latlon_to_utm, axis=1)
         df = feature_engineering(df, cols_drop=["DISTANCE"])
 
     # identify the numerical and categorical data types

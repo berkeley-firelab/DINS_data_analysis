@@ -15,7 +15,7 @@ with open(os.path.join(DATA_DIR, "dins_estimator_params.json")) as f:
 if __name__ == "__main__":
 
     print("Data creation!")
-    os.environ['OMP_NUM_THREADS'] = '60'
+    os.environ['OMP_NUM_THREADS'] = '50'
 
     data_dict = data_preprocessing_pipeline(case_name=est_dict["DATA_CASE"], 
                                             new_features=est_dict["GENERATE_PKL_DATA"],
@@ -34,5 +34,5 @@ if __name__ == "__main__":
                            k_neighbors=est_dict["K_NS"], 
                            mixed_features=est_dict["MIXED_TYPE"])
     
-    clf = logit_model(X, y)
+    clf = logit_model(X, y.values.ravel())
     

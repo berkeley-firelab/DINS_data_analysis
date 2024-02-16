@@ -43,3 +43,4 @@ dependencies:
   - pip:
   # tensorflow
     - tensorflow[and-cuda]
+    - swifter

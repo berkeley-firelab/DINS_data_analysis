@@ -65,7 +65,7 @@ def logit_model(X_train, y_train,
     if do_grid_search:
         clf = LogisticRegression(solver="saga",
                                  warm_start=False,
-                                 max_iter=10**3,
+                                 max_iter=10**4,
                                  multi_class="multinomial",
                                  penalty="elasticnet",
                                  fit_intercept=True)
@@ -102,11 +102,11 @@ def logit_model(X_train, y_train,
     else:
         clf = LogisticRegression(solver="saga",
                                  warm_start=False,
-                                 max_iter=1000,
+                                 max_iter=10000,
                                  multi_class="multinomial",
                                  penalty="elasticnet",
                                  n_jobs=-1,
-                                 C=69.0522,
+                                 C=12,
                                  fit_intercept=True,
                                  l1_ratio=0.95477)
 
