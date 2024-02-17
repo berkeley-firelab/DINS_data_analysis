@@ -3,7 +3,7 @@ import json
 
 from utils.directory_structure import DATA_DIR, OUTPUT_DIR
 from utils.preprocessing import data_preprocessing_pipeline, balance_classes
-from estimator import logit_model
+from utils.estimator import logit_model
 
 from IPython import embed
 
