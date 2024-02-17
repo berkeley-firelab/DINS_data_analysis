@@ -1,7 +1,7 @@
 import os
 import json 
 
-from utils.directory_structure import DATA_DIR
+from utils.directory_structure import DATA_DIR, OUTPUT_DIR
 from utils.preprocessing import data_preprocessing_pipeline, balance_classes
 from estimator import logit_model
 
@@ -12,13 +12,24 @@ with open(os.path.join(DATA_DIR, "dins_estimator_params.json")) as f:
 
 if est_dict["MIXED_TYPE"] is False:
     est_dict["ENCODE_DATA"] = True
+    FEATURE_TYPE = "numeric"
 else:
     est_dict["ENCODE_DATA"] = False
+    FEATURE_TYPE = "mixed"
+
+MODEL_TYPE = est_dict["MODEL_TYPE"]
+MODEL_VERSION = est_dict["MODEL_VERSION"]
+MODEL_DIR = os.path.join(OUTPUT_DIR, MODEL_TYPE)
+if not os.path.exists(MODEL_DIR):
+    os.makedirs(MODEL_DIR, exist_ok=True)
+
+ML_MODEL_NAME = "{}_{}_using_{}_features.pkl".format(MODEL_TYPE, MODEL_VERSION, FEATURE_TYPE)
+SAVE_PATH = os.path.join(MODEL_DIR, ML_MODEL_NAME)
 
 if __name__ == "__main__":
 
     print("Data creation!")
-    os.environ['OMP_NUM_THREADS'] = '50'
+    # os.environ['OMP_NUM_THREADS'] = '100'
 
     data_dict = data_preprocessing_pipeline(case_name=est_dict["DATA_CASE"], 
                                             renew_data=est_dict["RENEW_DATA"],
@@ -36,6 +47,13 @@ if __name__ == "__main__":
                            strategy=est_dict["BALANCE_STRATEGY"],
                            k_neighbors=est_dict["K_NS"], 
                            mixed_features=est_dict["MIXED_TYPE"])
-    
-    clf = logit_model(X, y.values.ravel())
+
+    print("Classes are balanced and start of training!")
+
+    if y.shape[1] > 1:
+        clf = logit_model(X, y, do_grid_search=False, save_path=SAVE_PATH)
+    else:
+        clf = logit_model(X, y.values.ravel(), do_grid_search=False, save_path=SAVE_PATH)
+
+    embed()
     

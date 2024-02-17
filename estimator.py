@@ -22,20 +22,6 @@ from IPython import embed
 with open(os.path.join(DATA_DIR, "dins_estimator_params.json")) as f:
     est_dict = json.load(f)
 
-if est_dict["MIXED_TYPE"] is True:
-    FEATURE_TYPE = "mixed"
-else:
-    FEATURE_TYPE = "numeric"
-
-MODEL_TYPE = est_dict["MODEL_TYPE"]
-MODEL_VERSION = est_dict["MODEL_VERSION"]
-MODEL_DIR = os.path.join(OUTPUT_DIR, MODEL_TYPE)
-if not os.path.exists(MODEL_DIR):
-    os.makedirs(MODEL_DIR, exist_ok=True)
-
-
-ML_MODEL_NAME = "{}_{}_using_{}_features.pkl".format(MODEL_TYPE, MODEL_VERSION, FEATURE_TYPE)
-SAVE_NAME = os.path.join(MODEL_DIR, ML_MODEL_NAME)
 
 
 def logit_model(X_train, y_train,

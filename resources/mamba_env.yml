@@ -1,4 +1,4 @@
-name: dins-proj
+name: dins
 
 dependencies:
   ## specify desired version if needed
@@ -9,12 +9,10 @@ dependencies:
   - jupyterlab
   - pandoc
   - pandocfilters
-  - python-language-server
   - nodejs
 
   - numpy 
   - pandas
-  - pyarrow
   - scipy
   - scikit-image
   - scikit-learn
@@ -41,6 +39,7 @@ dependencies:
   - geopandas
 
   - pip:
-  # tensorflow
     - tensorflow[and-cuda]
     - swifter
+    - python-language-server[all]
+    - pyarrow
