@@ -1,9 +1,9 @@
 {
     "DATA_CASE" : "dins_2017_2022",
-    "RENEW_DATA" : false,
-    "MIXED_TYPE" : false,
+    "RENEW_DATA" : true,
+    "MIXED_TYPE" : true,
     "SCALE_DATA" : true,
-    "WEIGHTED_CLASSES": true,
+    "WEIGHTED_CLASSES": false,
     "BALANCE_STRATEGY" : "auto",
     "K_NS" : 10,
     "MODEL_TYPE": "logit",

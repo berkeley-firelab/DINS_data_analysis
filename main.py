@@ -29,7 +29,6 @@ SAVE_PATH = os.path.join(MODEL_DIR, ML_MODEL_NAME)
 if __name__ == "__main__":
 
     print("Data creation!")
-    # os.environ['OMP_NUM_THREADS'] = '100'
 
     data_dict = data_preprocessing_pipeline(case_name=est_dict["DATA_CASE"], 
                                             renew_data=est_dict["RENEW_DATA"],
@@ -51,9 +50,6 @@ if __name__ == "__main__":
     print("Classes are balanced and start of training!")
 
     if y.shape[1] > 1:
-        clf = logit_model(X, y, do_grid_search=False, save_path=SAVE_PATH)
+        clf = logit_model(X, y, do_grid_search=True, save_path=SAVE_PATH)
     else:
-        clf = logit_model(X, y.values.ravel(), do_grid_search=False, save_path=SAVE_PATH)
-
-    embed()
-    
+        clf = logit_model(X, y.values.ravel(), do_grid_search=True, save_path=SAVE_PATH)
