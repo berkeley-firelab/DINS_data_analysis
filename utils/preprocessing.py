@@ -248,11 +248,11 @@ def feature_engineering(X, cols_drop=None):
 
 
 
-def data_preprocessing_pipeline(case_name, new_features=False, encode_data=True, scale_data=True, weighted_classes=False):
+def data_preprocessing_pipeline(case_name, renew_data=False, encode_data=True, scale_data=True, weighted_classes=False):
     """_summary_
 
     :param case_name: _description_
-    :param new_features: _description_, defaults to False
+    :param renew_data: _description_, defaults to False
     :param encode_data: _description_, defaults to True
     :param scale_data: _description_, defaults to True
     :return: _description_
@@ -268,7 +268,7 @@ def data_preprocessing_pipeline(case_name, new_features=False, encode_data=True,
         fname = os.path.join(OUTPUT_DIR, f"{case_name}_{postfix_name}_train_test_catboost_ready_data.pkl")
 
     col_processor = categorical_to_numerical()
-    if new_features:
+    if renew_data:
         # step 1. 
         print("Read, feature engineer, and split between train and test")
         X_train_full, X_test, y_train_full, y_test, _ = read_feature_engineer_split(f"{case_name}.csv")

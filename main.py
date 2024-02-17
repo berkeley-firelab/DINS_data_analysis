@@ -10,7 +10,10 @@ from IPython import embed
 with open(os.path.join(DATA_DIR, "dins_estimator_params.json")) as f:
     est_dict = json.load(f)
 
-
+if est_dict["MIXED_TYPE"] is False:
+    est_dict["ENCODE_DATA"] = True
+else:
+    est_dict["ENCODE_DATA"] = False
 
 if __name__ == "__main__":
 
@@ -18,7 +21,7 @@ if __name__ == "__main__":
     os.environ['OMP_NUM_THREADS'] = '50'
 
     data_dict = data_preprocessing_pipeline(case_name=est_dict["DATA_CASE"], 
-                                            new_features=est_dict["GENERATE_PKL_DATA"],
+                                            renew_data=est_dict["RENEW_DATA"],
                                             encode_data=est_dict["ENCODE_DATA"],
                                             scale_data=est_dict["SCALE_DATA"],
                                             weighted_classes=est_dict["WEIGHTED_CLASSES"])
