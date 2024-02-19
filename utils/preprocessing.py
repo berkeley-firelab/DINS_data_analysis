@@ -2,7 +2,7 @@ import os
 import pickle
 import numpy as np
 import pandas as pd
-
+import swifter
 
 # Geospatial imports
 import pyproj
@@ -12,12 +12,14 @@ from pyproj import Transformer
 # ML related imports
 from sklearn.model_selection import train_test_split
 from sklearn.metrics.pairwise import haversine_distances, pairwise_distances
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import OneHotEncoder, StandardScaler, LabelEncoder
+from imblearn.combine import SMOTETomek
+from imblearn.over_sampling import SMOTEN
 
 
 # AT utility imports
 from utils.directory_structure import DATA_DIR, OUTPUT_DIR
-from utils.custom_encoder import custom_categorical_encoder
+from utils.custom_encoder import categorical_to_numerical
 
 from IPython import embed
 
@@ -94,7 +96,7 @@ def read_feature_engineer_split(data_file_name, x_eng=True):
 
     # adding UTM coordinate and zone for potential imputation methods
     if x_eng:
-        df[["utm_easting", "utm_northing", "utm_zone"]] = df.apply(latlon_to_utm, axis=1)
+        df[["utm_easting", "utm_northing", "utm_zone"]] = df.swifter.apply(latlon_to_utm, axis=1)
         df = feature_engineering(df, cols_drop=["DISTANCE"])
 
     # identify the numerical and categorical data types
@@ -174,7 +176,7 @@ def pairwise_dist_imputer_catnum(data, nan_cols, n_neighbors=5, metric="euclidea
         
         dist_matrix = pairwise_distances(df_nan.loc[:, ("utm_easting", "utm_northing")].values, 
                                          df_ref.loc[:, ("utm_easting", "utm_northing")].values, 
-                                         metric=metric, n_jobs=-1)
+                                         metric=metric, n_jobs=10)
         nearest_idxs = np.argpartition(dist_matrix, n_neighbors, axis=1)[:, :n_neighbors]
 
         if c in cat_cols:
@@ -244,19 +246,31 @@ def feature_engineering(X, cols_drop=None):
     return df
 
 
-def data_preprocessing_pipeline(case_name, new_features=False, scale_data=True):
-    """
-    1. read and feature engineer data, split in train test
-    2. impute the missing values for both categorical and numerical    
-    3. scale and normalize the selected numerical features
-    4. encoding the categorical variables in X and y
-    """
 
 
-    fname = os.path.join(OUTPUT_DIR, f"{case_name}_train_test_vars.pkl")
-    if new_features:
+def data_preprocessing_pipeline(case_name, renew_data=False, encode_data=True, scale_data=True, weighted_classes=False):
+    """_summary_
+
+    :param case_name: _description_
+    :param renew_data: _description_, defaults to False
+    :param encode_data: _description_, defaults to True
+    :param scale_data: _description_, defaults to True
+    :return: _description_
+    """
+    if weighted_classes is True:
+        postfix_name = "lbe_targets"
+    else:
+        postfix_name = "ohe_targets"
+
+    if encode_data:
+        fname = os.path.join(OUTPUT_DIR, f"{case_name}_{postfix_name}_train_test_ml_ready_data.pkl")
+    else:
+        fname = os.path.join(OUTPUT_DIR, f"{case_name}_{postfix_name}_train_test_catboost_ready_data.pkl")
+
+    col_processor = categorical_to_numerical()
+    if renew_data:
         # step 1. 
-        print("Reading, feature engineering, and split between train and test")
+        print("Read, feature engineer, and split between train and test")
         X_train_full, X_test, y_train_full, y_test, _ = read_feature_engineer_split(f"{case_name}.csv")
 
         # step 2. 
@@ -267,17 +281,42 @@ def data_preprocessing_pipeline(case_name, new_features=False, scale_data=True):
         X_test_nan_cols = X_test.columns[X_test.isna().any()].tolist()
         X_test = pairwise_dist_imputer_catnum(X_test, nan_cols=X_test_nan_cols)      
 
-        # step 3. 
-        print("Encoding")
-        X_encoder = custom_categorical_encoder()
-        X_train_encoded = X_encoder.fit_transform(X_train_full)
-        X_test_encoded  = X_encoder.transform(X_test)
+        if encode_data:
+            # step 3. 
+            print("Encoding")
+            X_encoder = OneHotEncoder(dtype=np.float64, sparse_output=False)
+            X_train_cat, X_train_num = col_processor.separate_to_cat_num(X_train_full)        
+            X_test_cat, X_test_num = col_processor.separate_to_cat_num(X_test)
 
-        y_encoder = OneHotEncoder(dtype=np.float64, sparse_output=False)
-        y_train_encoded = y_encoder.fit_transform(y_train_full.values.reshape(-1, 1))
-        y_test_encoded  = y_encoder.transform(y_test.values.reshape(-1, 1))
+            X_train_cat_encoded = X_encoder.fit_transform(X_train_cat)
+            X_test_cat_encoded  = X_encoder.transform(X_test_cat)
+            X_train_cat_encoded = pd.DataFrame(X_train_cat_encoded, columns=X_encoder.get_feature_names_out().tolist(), index=X_train_full.index)
+            X_test_cat_encoded = pd.DataFrame(X_test_cat_encoded, columns=X_encoder.get_feature_names_out().tolist(), index=X_test.index)
+            X_train_encoded = X_train_num.join(X_train_cat_encoded)
+            X_test_encoded = X_test_num.join(X_test_cat_encoded)
 
-        # step 4.
+        else:
+            print("No encoding for the features!")
+            X_train_encoded = X_train_full
+            X_test_encoded = X_test
+
+        # step 4. encoding vs labeling (depending on whether classes have weights)
+        if weighted_classes is True:
+            y_encoder = LabelEncoder()
+            y_train_encoded = y_encoder.fit_transform(y_train_full.values.ravel())
+            y_test_encoded = y_encoder.transform(y_test.values.ravel())
+            y_train_encoded = pd.DataFrame(y_train_encoded, columns=["DAMAGE"], index=y_train_full.index)
+            y_test_encoded = pd.DataFrame(y_test_encoded, columns=["DAMAGE"], index=y_test.index)
+
+        else:
+            y_encoder = OneHotEncoder(dtype=np.float64, sparse_output=False)
+            y_train_encoded = y_encoder.fit_transform(y_train_full.values.reshape(-1, 1))
+            y_test_encoded  = y_encoder.transform(y_test.values.reshape(-1, 1))
+            y_col_name = [y_train_full.name+"_"+c.split("_")[1] for c in y_encoder.get_feature_names_out().tolist()]
+            y_train_encoded = pd.DataFrame(y_train_encoded, columns=y_col_name, index=y_train_full.index)
+            y_test_encoded = pd.DataFrame(y_test_encoded, columns=y_col_name, index=y_test.index)
+
+        # step 5.
         cols_drop  = ["LATITUDE", "LONGITUDE", "utm_easting", "utm_northing", "utm_zone", "YEARBUILT", "SSD"]
         cols_scale = ["YEARBUILT", "SSD"]
         if scale_data:
@@ -289,9 +328,15 @@ def data_preprocessing_pipeline(case_name, new_features=False, scale_data=True):
             X_test_encoded.drop(cols_drop, axis=1, inplace=True)
         else:
             pass
-
-        data_dict = {"X_train": X_train_encoded, "X_test": X_test_encoded, 
-                        "y_train": y_train_encoded, "y_test": y_test_encoded}
+        
+        if encode_data:
+            data_dict = {"X_train": X_train_encoded, "X_test": X_test_encoded, 
+                         "y_train": y_train_encoded, "y_test": y_test_encoded,
+                         "X_encoder": X_encoder, "y_encoder": y_encoder}
+        else:
+            data_dict = {"X_train": X_train_encoded, "X_test": X_test_encoded, 
+                         "y_train": y_train_encoded, "y_test": y_test_encoded, 
+                         "y_encoder": y_encoder}
         
         with open(fname, 'wb') as file:
             pickle.dump(data_dict, file)
@@ -300,3 +345,33 @@ def data_preprocessing_pipeline(case_name, new_features=False, scale_data=True):
             data_dict = pickle.load(file)
 
     return data_dict
+
+
+def balance_classes(X, y, strategy="auto", k_neighbors=10, mixed_features=False):
+    """resample to balance class representation in dataset
+
+    :param X: a dataframe of features
+    :param y: a dataframe of target classes which can be encoded 
+    :param strategy: sampling strategy, defaults to "auto"
+    :param k_neighbors: number of neighboring points, defaults to 10
+    :param mixed_features: boolean determining whether the features X
+    are only numiercal or mix of numerical and categorical, defaults to False
+    :return: _description_
+    """
+
+    X = X.copy()
+    y = y.copy()
+    y_cols = y.columns.tolist()
+
+    if mixed_features is True:
+        crs = SMOTEN(sampling_strategy=strategy, random_state=2001, k_neighbors=k_neighbors, n_jobs=-1)
+    else:
+        crs = SMOTETomek(sampling_strategy=strategy, random_state=1991, n_jobs=-1)
+
+    X_train, y_train = crs.fit_resample(X, y.values)
+    y_train = pd.DataFrame(y_train, columns=y_cols, index=X_train.index)
+
+    return X_train, y_train
+
+
+
