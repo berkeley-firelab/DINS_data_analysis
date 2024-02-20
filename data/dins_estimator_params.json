@@ -1,11 +1,11 @@
 {
     "DATA_CASE" : "dins_2017_2022",
-    "RENEW_DATA" : true,
-    "MIXED_TYPE" : true,
+    "RENEW_DATA" : false,
+    "MIXED_TYPE" : false,
     "SCALE_DATA" : true,
-    "WEIGHTED_CLASSES": false,
+    "WEIGHTED_CLASSES": true,
     "BALANCE_STRATEGY" : "auto",
     "K_NS" : 10,
-    "MODEL_TYPE": "logit",
+    "MODEL_TYPE": "rf",
     "MODEL_VERSION": "v0"
 }
