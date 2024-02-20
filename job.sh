@@ -4,7 +4,7 @@
 #SBATCH --output=rf_grid_search.out
 #SBATCH --error=rf_grid_search.err
 #SBATCH --partition=homaq
-#SBATCH --nodelist=homacs[003-004]
+#SBATCH --nodelist=homacs[1,2]
 #SBATCH --nodes=2
 #SBATCH --ntasks=64
 #SBATCH --ntasks-per-core=1
