@@ -1,7 +1,7 @@
 {
     "DATA_CASE" : "dins_2017_2022",
     "RENEW_DATA" : false,
-    "MIXED_TYPE" : true,
+    "MIXED_TYPE" : false,
     "SCALE_DATA" : true,
     "WEIGHTED_CLASSES": true,
     "BALANCE_STRATEGY" : "auto",
