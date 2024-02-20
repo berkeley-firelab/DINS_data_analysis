@@ -3,7 +3,7 @@ import json
 
 from utils.directory_structure import DATA_DIR, OUTPUT_DIR
 from utils.preprocessing import data_preprocessing_pipeline, balance_classes
-from utils.estimator import logit_model
+from utils.estimator import logit_model, rf_model
 
 from IPython import embed
 
@@ -50,6 +50,8 @@ if __name__ == "__main__":
     print("Classes are balanced and start of training!")
 
     if y.shape[1] > 1:
-        clf = logit_model(X, y, do_grid_search=True, save_path=SAVE_PATH)
+        clf = rf_model(X, y, do_grid_search=True, save_path=SAVE_PATH)
+        # clf = logit_model(X, y, do_grid_search=True, save_path=SAVE_PATH)
     else:
-        clf = logit_model(X, y.values.ravel(), do_grid_search=True, save_path=SAVE_PATH)
+        clf = rf_model(X, y.values.ravel(), do_grid_search=True, save_path=SAVE_PATH)
+        # clf = logit_model(X, y.values.ravel(), do_grid_search=True, save_path=SAVE_PATH)
