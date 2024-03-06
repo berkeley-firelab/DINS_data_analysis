@@ -82,7 +82,7 @@ def read_feature_engineer_split(data_file_name, x_eng=True):
     """    
 
     file_path = os.path.join(DATA_DIR, data_file_name)
-    missing_values = ["", "NA", "na", "n/a", "N/A", "--", "nan"]
+    missing_values = ["", "NA", "na", "n/a", "N/A", "--", "nan", "Unknowns"]
     df = pd.read_csv(file_path, delimiter=",", na_values=missing_values)
 
     # dropping distance_meter
