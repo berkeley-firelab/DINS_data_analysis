@@ -1,21 +1,20 @@
 import os
+import glob
 import pickle
 import numpy as np
 import pandas as pd
-import swifter
 
 # Geospatial imports
 import pyproj
 from pyproj import Transformer
 
-
 # ML related imports
 from sklearn.model_selection import train_test_split
 from sklearn.metrics.pairwise import haversine_distances, pairwise_distances
+from sklearn.impute import KNNImputer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler, LabelEncoder
 from imblearn.combine import SMOTETomek
 from imblearn.over_sampling import SMOTEN
-
 
 # AT utility imports
 from utils.directory_structure import DATA_DIR, OUTPUT_DIR
@@ -72,7 +71,7 @@ def data_spliter(dataframe, test_size=0.2, target_label="DAMAGE"):
     return X_train, X_test, y_train, y_test
 
 
-def read_feature_engineer_split(data_file_name, x_eng=True):
+def read_feature_engineer_split(data_file_path, impute_lonlat=True, x_eng=True):
     """reads the data from CSV file, does minor edits, and
     separates based on class balances in the dataset.
 
@@ -81,12 +80,19 @@ def read_feature_engineer_split(data_file_name, x_eng=True):
     and tuple of (num_cols, cat_cols) names in string format.
     """    
 
-    file_path = os.path.join(DATA_DIR, data_file_name)
-    missing_values = ["", "NA", "na", "n/a", "N/A", "--", "nan", "Unknowns"]
-    df = pd.read_csv(file_path, delimiter=",", na_values=missing_values)
 
-    # dropping distance_meter
-    df.drop("distance_meter", axis=1, inplace=True)
+    missing_values = ["", "NA", "na", "n/a", "N/A", "--", "nan", "Unknown"]
+    df = pd.read_csv(data_file_path, delimiter=",", na_values=missing_values)
+
+    # treating distance in datasets
+    drop_cols = ["distance_meter", "ZIPCODE"]
+    for c in drop_cols:
+        if c in df.columns.to_list():
+            df.drop(c, axis=1, inplace=True)
+
+    if "Distance" in df.columns.to_list():
+        df["DISTANCE"] = df["Distance"]
+        df.drop("Distance", axis=1, inplace=True)
 
     # converting YEARBUILT to a numeric column in the main dataset 
     df["YEARBUILT"] = pd.to_numeric(df["YEARBUILT"].values, errors="coerce")
@@ -94,9 +100,18 @@ def read_feature_engineer_split(data_file_name, x_eng=True):
     # dropping samples with YEARBUILT less than 1800!
     df = df[df["YEARBUILT"] >= 1800]
 
+    # imputing the lon, lats if needed
+    df["LONGITUDE"] = pd.to_numeric(df["LONGITUDE"].values, errors="coerce")
+    df["LATITUDE"] = pd.to_numeric(df["LATITUDE"].values, errors="coerce")
+    if impute_lonlat & (pd.isna(df["LONGITUDE"]).any()):
+        lonlat_imp = KNNImputer(n_neighbors=5)
+        df[["LONGITUDE", "LATITUDE"]] = lonlat_imp.fit_transform(df[["LONGITUDE", "LATITUDE"]])
+    else:
+        pass
+
     # adding UTM coordinate and zone for potential imputation methods
     if x_eng:
-        df[["utm_easting", "utm_northing", "utm_zone"]] = df.swifter.apply(latlon_to_utm, axis=1)
+        df[["utm_easting", "utm_northing", "utm_zone"]] = df.apply(latlon_to_utm, axis=1)
         df = feature_engineering(df, cols_drop=["DISTANCE"])
 
     # identify the numerical and categorical data types
@@ -177,6 +192,14 @@ def pairwise_dist_imputer_catnum(data, nan_cols, n_neighbors=5, metric="euclidea
         dist_matrix = pairwise_distances(df_nan.loc[:, ("utm_easting", "utm_northing")].values, 
                                          df_ref.loc[:, ("utm_easting", "utm_northing")].values, 
                                          metric=metric, n_jobs=10)
+        
+        if (dist_matrix.shape[1] <= n_neighbors) & (dist_matrix.shape[1] > 1):
+            n_neighbors = dist_matrix.shape[1] - 1
+        elif (dist_matrix.shape[1] == 1):
+            n_neighbors = 1
+        else:
+            n_neighbors = n_neighbors
+
         nearest_idxs = np.argpartition(dist_matrix, n_neighbors, axis=1)[:, :n_neighbors]
 
         if c in cat_cols:
@@ -246,15 +269,14 @@ def feature_engineering(X, cols_drop=None):
     return df
 
 
-
-
-def data_preprocessing_pipeline(case_name, renew_data=False, encode_data=True, scale_data=True, weighted_classes=False):
+def data_preprocessing_pipeline(case_name, renew_data=False, encode_data=True, scale_data=True, task_type="binary", weighted_classes=False):
     """_summary_
 
     :param case_name: _description_
     :param renew_data: _description_, defaults to False
     :param encode_data: _description_, defaults to True
     :param scale_data: _description_, defaults to True
+    :param task_type: either multiclass_classification or binary
     :return: _description_
     """
     if weighted_classes is True:
@@ -263,15 +285,18 @@ def data_preprocessing_pipeline(case_name, renew_data=False, encode_data=True, s
         postfix_name = "ohe_targets"
 
     if encode_data:
-        fname = os.path.join(OUTPUT_DIR, f"{case_name}_{postfix_name}_train_test_ml_ready_data.pkl")
+        fname = os.path.join(OUTPUT_DIR, f"{case_name}_{postfix_name}_train_test_num_ready_data_{task_type}.pkl")
     else:
-        fname = os.path.join(OUTPUT_DIR, f"{case_name}_{postfix_name}_train_test_catboost_ready_data.pkl")
+        fname = os.path.join(OUTPUT_DIR, f"{case_name}_{postfix_name}_train_test_cat_ready_data_{task_type}.pkl")
+
+    data_file_path = glob.glob(os.path.join(DATA_DIR, f"**/{case_name}*"), recursive=True)[0]
+    print(data_file_path)
 
     col_processor = categorical_to_numerical()
     if renew_data:
         # step 1. 
         print("Read, feature engineer, and split between train and test")
-        X_train_full, X_test, y_train_full, y_test, _ = read_feature_engineer_split(f"{case_name}.csv")
+        X_train_full, X_test, y_train_full, y_test, _ = read_feature_engineer_split(data_file_path)
 
         # step 2. 
         print("Imputation based on location information")
@@ -284,7 +309,7 @@ def data_preprocessing_pipeline(case_name, renew_data=False, encode_data=True, s
         if encode_data:
             # step 3. 
             print("Encoding")
-            X_encoder = OneHotEncoder(dtype=np.float64, sparse_output=False)
+            X_encoder = OneHotEncoder(dtype=np.float64, sparse=False)
             X_train_cat, X_train_num = col_processor.separate_to_cat_num(X_train_full)        
             X_test_cat, X_test_num = col_processor.separate_to_cat_num(X_test)
 
@@ -301,42 +326,80 @@ def data_preprocessing_pipeline(case_name, renew_data=False, encode_data=True, s
             X_test_encoded = X_test
 
         # step 4. encoding vs labeling (depending on whether classes have weights)
-        if weighted_classes is True:
-            y_encoder = LabelEncoder()
-            y_train_encoded = y_encoder.fit_transform(y_train_full.values.ravel())
-            y_test_encoded = y_encoder.transform(y_test.values.ravel())
-            y_train_encoded = pd.DataFrame(y_train_encoded, columns=["DAMAGE"], index=y_train_full.index)
-            y_test_encoded = pd.DataFrame(y_test_encoded, columns=["DAMAGE"], index=y_test.index)
+        if (task_type=="multiclass_classification"):
+            if weighted_classes is True:
+                y_encoder = LabelEncoder()
+                y_train_encoded = y_encoder.fit_transform(y_train_full.values.ravel())
+                y_test_encoded = y_encoder.transform(y_test.values.ravel())
+                y_train_encoded = pd.DataFrame(y_train_encoded, columns=["DAMAGE"], index=y_train_full.index)
+                y_test_encoded = pd.DataFrame(y_test_encoded, columns=["DAMAGE"], index=y_test.index)
 
-        else:
-            y_encoder = OneHotEncoder(dtype=np.float64, sparse_output=False)
-            y_train_encoded = y_encoder.fit_transform(y_train_full.values.reshape(-1, 1))
-            y_test_encoded  = y_encoder.transform(y_test.values.reshape(-1, 1))
-            y_col_name = [y_train_full.name+"_"+c.split("_")[1] for c in y_encoder.get_feature_names_out().tolist()]
-            y_train_encoded = pd.DataFrame(y_train_encoded, columns=y_col_name, index=y_train_full.index)
-            y_test_encoded = pd.DataFrame(y_test_encoded, columns=y_col_name, index=y_test.index)
+            else:
+                y_encoder = OneHotEncoder(dtype=np.float64, sparse_output=False)
+                y_train_encoded = y_encoder.fit_transform(y_train_full.values.reshape(-1, 1))
+                y_test_encoded  = y_encoder.transform(y_test.values.reshape(-1, 1))
+                y_col_name = [y_train_full.name+"_"+c.split("_")[1] for c in y_encoder.get_feature_names_out().tolist()]
+                y_train_encoded = pd.DataFrame(y_train_encoded, columns=y_col_name, index=y_train_full.index)
+                y_test_encoded = pd.DataFrame(y_test_encoded, columns=y_col_name, index=y_test.index)
+
+        elif (task_type == "binary"):
+            # train targets
+            damage_bool = (y_train_full == "Destroyed (>50%)")
+            y_train_full.loc[~damage_bool] = 0
+            y_train_full.loc[damage_bool] = 1
+
+            # test targets
+            damage_bool = (y_test == "Destroyed (>50%)")
+            y_test.loc[~damage_bool] = 0
+            y_test.loc[damage_bool] = 1
+
+            # to save time reassign to encoded 
+            y_train_encoded = y_train_full.astype(np.float64)
+            y_test_encoded  = y_test.astype(np.float64)
+            del y_train_full, y_test
 
         # step 5.
-        cols_drop  = ["LATITUDE", "LONGITUDE", "utm_easting", "utm_northing", "utm_zone", "YEARBUILT", "SSD"]
-        cols_scale = ["YEARBUILT", "SSD"]
+        cols_drop  = ["LATITUDE", "LONGITUDE", "utm_easting", "utm_northing", "utm_zone", "Z"]
+        cols_scale = ["YEARBUILT", "SSD", "EMBER", "FLAME", "VSD", "X", "Y"]
+        cols_scale_name = [f"{c.lower()}_scaled" for c in cols_scale]
+        
         if scale_data:
             print("Normalize the required features and drop extra information!")
-            scaler = StandardScaler()
-            X_train_encoded[["year_scaled", "ssd_scaled"]] = scaler.fit_transform(X_train_encoded[cols_scale])
-            X_test_encoded[["year_scaled", "ssd_scaled"]] = scaler.transform(X_test_encoded[cols_scale])
-            X_train_encoded.drop(cols_drop, axis=1, inplace=True)
-            X_test_encoded.drop(cols_drop, axis=1, inplace=True)
+            for i, c in enumerate(cols_scale):
+                scaler = StandardScaler()
+                if c in X_train_encoded.columns.to_list():
+                    X_train_encoded[cols_scale_name[i]] = scaler.fit_transform(X_train_encoded[c].values.reshape(-1, 1))
+                    X_test_encoded[cols_scale_name[i]]  = scaler.transform(X_test_encoded[c].values.reshape(-1, 1))
         else:
-            pass
+            print("No scaling is done for numerical data!")
         
+        # step 6. drop unnecessary columns
+        cols_drop += cols_scale
+        for i, c in enumerate(cols_drop):
+            if c in X_train_encoded.columns.to_list():
+                X_train_encoded.drop(c, axis=1, inplace=True)
+                X_test_encoded.drop(c, axis=1, inplace=True)
+        
+        # step 7. write to disk                
         if encode_data:
-            data_dict = {"X_train": X_train_encoded, "X_test": X_test_encoded, 
-                         "y_train": y_train_encoded, "y_test": y_test_encoded,
-                         "X_encoder": X_encoder, "y_encoder": y_encoder}
+            if task_type == "multiclass_classification":
+                data_dict = {"X_train": X_train_encoded, "X_test": X_test_encoded, 
+                            "y_train": y_train_encoded, "y_test": y_test_encoded,
+                            "X_encoder": X_encoder, "y_encoder": y_encoder}
+                
+            elif task_type == "binary":
+                data_dict = {"X_train": X_train_encoded, "X_test": X_test_encoded, 
+                            "y_train": y_train_encoded, "y_test": y_test_encoded,
+                            "X_encoder": X_encoder} 
         else:
-            data_dict = {"X_train": X_train_encoded, "X_test": X_test_encoded, 
-                         "y_train": y_train_encoded, "y_test": y_test_encoded, 
-                         "y_encoder": y_encoder}
+            if task_type == "multiclass_classification":
+                data_dict = {"X_train": X_train_encoded, "X_test": X_test_encoded, 
+                            "y_train": y_train_encoded, "y_test": y_test_encoded,
+                            "y_encoder": y_encoder}
+                
+            elif task_type == "binary":
+                data_dict = {"X_train": X_train_encoded, "X_test": X_test_encoded, 
+                            "y_train": y_train_encoded, "y_test": y_test_encoded} 
         
         with open(fname, 'wb') as file:
             pickle.dump(data_dict, file)

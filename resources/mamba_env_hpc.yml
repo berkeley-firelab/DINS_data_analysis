@@ -1,49 +1,45 @@
 name: dins
-  
+
 dependencies:
-  ## specify desired version
+  ## specify desired version if needed
   - python
   - pip
   - ipykernel
   - jupyter
   - jupyterlab
-  - jupyterlab-lsp
   - pandoc
   - pandocfilters
-  - python-language-server
   - nodejs
 
-  ## uncomment for use with Jupyter
   - numpy 
   - pandas
   - scipy
   - scikit-image
   - scikit-learn
   - matplotlib 
-  - seaborn
-  - datashader
   - plotly
-  - holoviews
-  - bokeh
+  - seaborn
   - colorcet
-  - econml
-  - causalml
-  - imbalanced-learn
   - shap
+  - xgboost
+  - imbalanced-learn
+  - statsmodels
+  - catboost
 
 # HPC
+  - cython
   - numba
   - dask
-  - datashader
+  - cudatoolkit
 
-# geo-spatial 
+# geospatial libraries
   - gdal
   - rasterio
   - shapely
   - geopandas
 
-  ## PyPI packages
   - pip:
-  # tensorflow
-    - tensorflow
-    - tensorflow-metal
+    - tensorflow[and-cuda]
+    - swifter
+    - python-language-server[all]
+    - pyarrow

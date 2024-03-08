@@ -1,9 +1,11 @@
 {
-    "DATA_CASE" : "dins_2017_2022",
+    "DATA_CASE" : "tubbs",
     "RENEW_DATA" : true,
     "MIXED_TYPE" : true,
+    "TASK_TYPE"  : "binary",
     "SCALE_DATA" : true,
     "WEIGHTED_CLASSES": false,
+    "DROP_COLS" : ["ZIPCODE"],
     "BALANCE_STRATEGY" : "auto",
     "K_NS" : 10,
     "MODEL_TYPE": "logit",

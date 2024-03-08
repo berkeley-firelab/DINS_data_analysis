@@ -7,7 +7,7 @@ from utils.estimator import logit_model
 
 from IPython import embed
 
-with open(os.path.join(DATA_DIR, "dins_estimator_params.json")) as f:
+with open(os.path.join(DATA_DIR, "estimator_params.json")) as f:
     est_dict = json.load(f)
 
 if est_dict["MIXED_TYPE"] is False:
@@ -34,6 +34,7 @@ if __name__ == "__main__":
                                             renew_data=est_dict["RENEW_DATA"],
                                             encode_data=est_dict["ENCODE_DATA"],
                                             scale_data=est_dict["SCALE_DATA"],
+                                            task_type=est_dict["TASK_TYPE"],
                                             weighted_classes=est_dict["WEIGHTED_CLASSES"])
     
     print("Data dictionary is created!")
@@ -41,13 +42,15 @@ if __name__ == "__main__":
     X = data_dict["X_train"]
     y = data_dict["y_train"]
 
-    # TODO: implement an if statment to whether balance the dataset
-    X, y = balance_classes(X, y, 
-                           strategy=est_dict["BALANCE_STRATEGY"],
-                           k_neighbors=est_dict["K_NS"], 
-                           mixed_features=est_dict["MIXED_TYPE"])
+    if est_dict["REBALANCE"]:
+        X, y = balance_classes(X, y, 
+                            strategy=est_dict["BALANCE_STRATEGY"],
+                            k_neighbors=est_dict["K_NS"], 
+                            mixed_features=est_dict["MIXED_TYPE"])
+        print("Classes are balanced and start of training!")
 
-    print("Classes are balanced and start of training!")
+    else:
+        print("No class balancing is considered!")
 
     if y.shape[1] > 1:
         clf = logit_model(X, y, do_grid_search=True, save_path=SAVE_PATH)
