@@ -126,7 +126,7 @@ def rf_model(X_train, y_train,
                           "mcc" : make_scorer(matthews_corrcoef)}
         param_dist = {
             "n_estimators": np.logspace(2, 3, 20, endpoint=True).astype(int).tolist(),
-            "max_depth": [None]+np.linspace(10, 1000, num=10, endpoint=True, dtype=np.int).tolist(),
+            "max_depth": [None]+np.linspace(10, 1000, num=10, endpoint=True, dtype=np.int64).tolist(),
             "criterion": ["gini", "entropy"],
             "max_features": [None, "sqrt", "log2"],
             "max_samples": [None, 0.9],

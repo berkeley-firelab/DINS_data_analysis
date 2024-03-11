@@ -2,6 +2,8 @@
 **/.DS_Store
 **/*.pkl
 TODOs.md
+**/*.err
+**/*.out
 
 # folders to be excluded
 **/__pycache__
