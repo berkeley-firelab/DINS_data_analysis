@@ -5,17 +5,8 @@ from utils.directory_structure import DATA_DIR, OUTPUT_DIR
 from utils.preprocessing import data_preprocessing_pipeline, balance_classes
 from utils.estimator import logit_model
 
-from IPython import embed
-
 with open(os.path.join(DATA_DIR, "estimator_params.json")) as f:
     est_dict = json.load(f)
-
-if est_dict["MIXED_TYPE"] is False:
-    est_dict["ENCODE_DATA"] = True
-    FEATURE_TYPE = "numeric"
-else:
-    est_dict["ENCODE_DATA"] = False
-    FEATURE_TYPE = "mixed"
 
 MODEL_TYPE = est_dict["MODEL_TYPE"]
 MODEL_VERSION = est_dict["MODEL_VERSION"]
@@ -23,7 +14,7 @@ MODEL_DIR = os.path.join(OUTPUT_DIR, MODEL_TYPE)
 if not os.path.exists(MODEL_DIR):
     os.makedirs(MODEL_DIR, exist_ok=True)
 
-ML_MODEL_NAME = "{}_{}_using_{}_features.pkl".format(MODEL_TYPE, MODEL_VERSION, FEATURE_TYPE)
+ML_MODEL_NAME = "{}_{}_using_{}_features.pkl".format(MODEL_TYPE, MODEL_VERSION, est_dict["FEATURE_TYPE"])
 SAVE_PATH = os.path.join(MODEL_DIR, ML_MODEL_NAME)
 
 if __name__ == "__main__":
@@ -48,7 +39,7 @@ if __name__ == "__main__":
             y,
             strategy=est_dict["BALANCE_STRATEGY"],
             k_neighbors=est_dict["K_NS"],
-            mixed_features=est_dict["MIXED_TYPE"],
+            feature_type=est_dict["FEATURE_TYPE"],
         )
         print("Classes are balanced and start of training!")
 
@@ -56,6 +47,6 @@ if __name__ == "__main__":
         print("No class balancing is considered!")
 
     if y.shape[1] > 1:
-        clf = logit_model(X, y, do_grid_search=True, save_path=SAVE_PATH)
+        clf = logit_model(X, y, do_grid_search=est_dict["GRID_SEARCH"], save_path=SAVE_PATH)
     else:
-        clf = logit_model(X, y.values.ravel(), do_grid_search=True, save_path=SAVE_PATH)
+        clf = logit_model(X, y.values.ravel(), do_grid_search=est_dict["GRID_SEARCH"], save_path=SAVE_PATH)
