@@ -5,6 +5,7 @@ from utils.directory_structure import DATA_DIR, OUTPUT_DIR
 from utils.preprocessing import data_preprocessing_pipeline, balance_classes
 from utils.estimator import logit_model
 
+
 with open(os.path.join(DATA_DIR, "estimator_params.json")) as f:
     est_dict = json.load(f)
 
@@ -33,7 +34,7 @@ if __name__ == "__main__":
     X = data_dict["X_train"]
     y = data_dict["y_train"]
 
-    if est_dict["REBALANCE"]:
+    if est_dict["BALANCE"]:
         X, y = balance_classes(
             X,
             y,
@@ -46,7 +47,7 @@ if __name__ == "__main__":
     else:
         print("No class balancing is considered!")
 
-    if y.shape[1] > 1:
+    if len(y.shape) > 1:
         clf = logit_model(X, y, do_grid_search=est_dict["GRID_SEARCH"], save_path=SAVE_PATH)
     else:
         clf = logit_model(X, y.values.ravel(), do_grid_search=est_dict["GRID_SEARCH"], save_path=SAVE_PATH)

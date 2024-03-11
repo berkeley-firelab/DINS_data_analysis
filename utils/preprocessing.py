@@ -309,7 +309,7 @@ def data_preprocessing_pipeline(case_name, renew_data=False, encode_data=True, s
         if encode_data:
             # step 3. 
             print("Encoding")
-            X_encoder = OneHotEncoder(dtype=np.float64, sparse=False)
+            X_encoder = OneHotEncoder(dtype=np.float64, sparse_output=False)
             X_train_cat, X_train_num = col_processor.separate_to_cat_num(X_train_full)        
             X_test_cat, X_test_num = col_processor.separate_to_cat_num(X_test)
 

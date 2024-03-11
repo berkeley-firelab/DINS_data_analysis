@@ -1,11 +1,12 @@
 {
     "DATA_CASE" : "Camp",
-    "RENEW_DATA" : true,
+    "RENEW_DATA" : false,
     "FEATURE_TYPE" : "numeric",
     "ENCODE_DATA" : true,
     "TASK_TYPE"  : "binary",
     "SCALE_DATA" : true,
     "WEIGHTED_CLASSES": false,
+    "BALANCE" : false,
     "BALANCE_STRATEGY" : "auto",
     "K_NS" : 10,
     "MODEL_TYPE": "logit",
