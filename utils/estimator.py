@@ -19,7 +19,7 @@ from utils.helpers import save_python_objects
 from IPython import embed
 
 
-with open(os.path.join(DATA_DIR, "dins_estimator_params.json")) as f:
+with open(os.path.join(DATA_DIR, "estimator_params.json")) as f:
     est_dict = json.load(f)
 
 
