@@ -426,7 +426,7 @@ def balance_classes(X, y, strategy="auto", k_neighbors=10, feature_type="mixed")
     y = y.copy()
     y_cols = y.columns.tolist()
 
-    if feature_type is "mixed":
+    if feature_type == "mixed":
         crs = SMOTEN(sampling_strategy=strategy, random_state=2001, k_neighbors=k_neighbors, n_jobs=-1)
     else:
         crs = SMOTETomek(sampling_strategy=strategy, random_state=1991, n_jobs=-1)
