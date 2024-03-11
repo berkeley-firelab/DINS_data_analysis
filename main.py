@@ -36,17 +36,20 @@ if __name__ == "__main__":
                                             scale_data=est_dict["SCALE_DATA"],
                                             task_type=est_dict["TASK_TYPE"],
                                             weighted_classes=est_dict["WEIGHTED_CLASSES"])
-    
+
     print("Data dictionary is created!")
 
     X = data_dict["X_train"]
     y = data_dict["y_train"]
 
     if est_dict["REBALANCE"]:
-        X, y = balance_classes(X, y, 
-                            strategy=est_dict["BALANCE_STRATEGY"],
-                            k_neighbors=est_dict["K_NS"], 
-                            mixed_features=est_dict["MIXED_TYPE"])
+        X, y = balance_classes(
+            X,
+            y,
+            strategy=est_dict["BALANCE_STRATEGY"],
+            k_neighbors=est_dict["K_NS"],
+            mixed_features=est_dict["MIXED_TYPE"],
+        )
         print("Classes are balanced and start of training!")
 
     else:
