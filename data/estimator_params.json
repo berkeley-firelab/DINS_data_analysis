@@ -1,6 +1,6 @@
 {
     "DATA_CASE" : "Camp",
-    "RENEW_DATA" : false,
+    "RENEW_DATA" : true,
     "FEATURE_TYPE" : "numeric",
     "ENCODE_DATA" : true,
     "TASK_TYPE"  : "binary",

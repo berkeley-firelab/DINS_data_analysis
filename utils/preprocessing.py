@@ -31,11 +31,11 @@ def latlon_to_utm(row):
     :param lat: lat in degree
     :param lon: lon in degree
     :return: easting, northing, and utm zone
-    """    
-    
+    """
+
     lat, lon = row["LATITUDE"], row["LONGITUDE"]
 
-    # determine the UTM zone number from longitude and 
+    # determine the UTM zone number from longitude and
     # whether zone is in the northern or southern hemisphere
     utm_zone = int(1 + (lon + 180.0) / 6.0)
     is_northern = lat >= 0
@@ -45,7 +45,7 @@ def latlon_to_utm(row):
     transformer = Transformer.from_crs(pyproj.CRS("EPSG:4326"), utm_crs, always_xy=True)
 
     easting, northing = transformer.transform(lon, lat)
-    
+
     return pd.Series([easting, northing, utm_zone])
 
 
@@ -57,16 +57,16 @@ def data_spliter(dataframe, test_size=0.2, target_label="DAMAGE"):
     :param test_size: portion allocated to test set, defaults to 0.2
     :param target_label: feature label to use for stratification, defaults to "DAMAGE"
     :return: panda dataframes of X_train, X_test, y_train, y_test
-    """    
+    """
 
     df = dataframe.copy()
     y = df.pop(target_label)
     X = df
 
     # splitting the data
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, 
-                                                        random_state=1980891, 
-                                                        shuffle=True, 
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size,
+                                                        random_state=1980891,
+                                                        shuffle=True,
                                                         stratify=y.values)
     return X_train, X_test, y_train, y_test
 
@@ -76,9 +76,9 @@ def read_feature_engineer_split(data_file_path, impute_lonlat=True, x_eng=True):
     separates based on class balances in the dataset.
 
     :param data_file_name: string of the file name
-    :return: panda dataframes of X_train_full, X_test, y_train_full, y_test, 
+    :return: panda dataframes of X_train_full, X_test, y_train_full, y_test,
     and tuple of (num_cols, cat_cols) names in string format.
-    """    
+    """
 
 
     missing_values = ["", "NA", "na", "n/a", "N/A", "--", "nan", "Unknown"]
@@ -94,7 +94,7 @@ def read_feature_engineer_split(data_file_path, impute_lonlat=True, x_eng=True):
         df["DISTANCE"] = df["Distance"]
         df.drop("Distance", axis=1, inplace=True)
 
-    # converting YEARBUILT to a numeric column in the main dataset 
+    # converting YEARBUILT to a numeric column in the main dataset
     df["YEARBUILT"] = pd.to_numeric(df["YEARBUILT"].values, errors="coerce")
 
     # dropping samples with YEARBUILT less than 1800!
@@ -128,7 +128,7 @@ def haversine_imputer_catnum(df, var="YEARBUILT", n_neighbors=5, is_categorical=
     Imputes the missing values in var feature of the dataframe (df)
     using the N closest Haversine distances based on the location data
 
-    :param df: pandas dataframe of the features 
+    :param df: pandas dataframe of the features
     :param var: string of the feature (variable) name, defaults to "YEARBUILT"
     :param n_neighbors: number of nearest neighbors to consider for imputation
     :param is_categorical: boolean indicating if the variable is categorical
@@ -142,7 +142,7 @@ def haversine_imputer_catnum(df, var="YEARBUILT", n_neighbors=5, is_categorical=
     # convert lat and lon values to radians
     for c in ["LATITUDE", "LONGITUDE"]:
         df.iloc[:, df.columns.get_loc(c)] = np.radians(df[c].values)
-    
+
     # split into NaN and non-NaN dataframes
     df_nan = df[df[var].isna()]
     df_ref = df[~df[var].isna()]
@@ -159,7 +159,7 @@ def haversine_imputer_catnum(df, var="YEARBUILT", n_neighbors=5, is_categorical=
         else:
             # mean for numerical data
             imputed_value = df_ref.iloc[idxs][var].mean()
-        
+
         df_nan.iloc[i, df_nan.columns.get_loc(var)] = imputed_value
 
     df_imputed = pd.concat([df_ref, df_nan])
@@ -169,9 +169,9 @@ def haversine_imputer_catnum(df, var="YEARBUILT", n_neighbors=5, is_categorical=
 
 def pairwise_dist_imputer_catnum(data, nan_cols, n_neighbors=5, metric="euclidean"):
     """
-    conducts imputation based on pairwise distance clustering in UTM projection 
+    conducts imputation based on pairwise distance clustering in UTM projection
 
-    :param df: pandas dataframe of the features 
+    :param df: pandas dataframe of the features
     :param nan_cols: a list of feature (variable) names (in string) that have nan or missing values
     :param n_neighbors: number of nearest neighbors to consider for imputation
     :param metric: method for calculating the matrix distance based on UTM projections
@@ -188,11 +188,11 @@ def pairwise_dist_imputer_catnum(data, nan_cols, n_neighbors=5, metric="euclidea
         df_nan = df[df[c].isna()]
         df_ref = df[~df[c].isna()]
         df_nan_idx = df_nan.index
-        
-        dist_matrix = pairwise_distances(df_nan.loc[:, ("utm_easting", "utm_northing")].values, 
-                                         df_ref.loc[:, ("utm_easting", "utm_northing")].values, 
+
+        dist_matrix = pairwise_distances(df_nan.loc[:, ("utm_easting", "utm_northing")].values,
+                                         df_ref.loc[:, ("utm_easting", "utm_northing")].values,
                                          metric=metric, n_jobs=10)
-        
+
         if (dist_matrix.shape[1] <= n_neighbors) & (dist_matrix.shape[1] > 1):
             n_neighbors = dist_matrix.shape[1] - 1
         elif (dist_matrix.shape[1] == 1):
@@ -208,7 +208,7 @@ def pairwise_dist_imputer_catnum(data, nan_cols, n_neighbors=5, metric="euclidea
                 df_nan.iloc[i, df_nan.columns.get_loc(c)] = agg_value
 
         elif c in num_cols:
-            for i, idx in enumerate(nearest_idxs): 
+            for i, idx in enumerate(nearest_idxs):
                 agg_value = df_ref.iloc[idx][c].mean()
                 df_nan.iloc[i, df_nan.columns.get_loc(c)] = agg_value
 
@@ -223,17 +223,17 @@ def pairwise_dist_imputer_catnum(data, nan_cols, n_neighbors=5, metric="euclidea
 def latlon_to_xyz(df):
     """converting lat, lon, alt to x, y, z coordinates
     this is a minor feature engineering to enable the
-    use of data for a variety of ML models, in particular 
+    use of data for a variety of ML models, in particular
     the ones that need a Standard feature set.
 
     Method:
         x = math.cos(phi) * math.cos(theta) * rho
         y = math.cos(phi) * math.sin(theta) * rho
         z = math.sin(phi) * rho # z is 'up'
-    
+
         where phi = lat, theta = lon
 
-    Since there is no elevation and the numerics will be 
+    Since there is no elevation and the numerics will be
     normalized, rho = 1.
 
     :param data: pandas dataframe of the entire dataset
@@ -247,10 +247,10 @@ def latlon_to_xyz(df):
     return data
 
 
-def feature_engineering(X, cols_drop=None):
+def feature_engineering(X, special_scale=False, cols_drop=None):
     """minor feature engineering on the dataset
 
-    :param X: pandas dataframe of the features 
+    :param X: pandas dataframe of the features
     :return: pandas dataframe of the features + processed/added ones
     """
 
@@ -258,10 +258,14 @@ def feature_engineering(X, cols_drop=None):
     df = X.copy()
 
     # convert (lat, lon) to xyz
-    df = latlon_to_xyz(df)    
+    df = latlon_to_xyz(df)
 
-    # nonlinear transformation of distance (provides a better PDF)
-    df["SSD"] = np.log10(df["DISTANCE"] * 0.3048 + 1)
+    if special_scale:
+        # nonlinear transformation of distance (provides a better PDF)
+        df["SSD"] = np.log10(df["DISTANCE"] * 0.3048 + 1)
+    else:
+        # converting to meters
+        df["SSD"] = df["DISTANCE"] * 0.3048
 
     if cols_drop:
         df.drop(cols_drop, axis=1, inplace=True)
@@ -294,23 +298,23 @@ def data_preprocessing_pipeline(case_name, renew_data=False, encode_data=True, s
 
     col_processor = categorical_to_numerical()
     if renew_data:
-        # step 1. 
+        # step 1.
         print("Read, feature engineer, and split between train and test")
         X_train_full, X_test, y_train_full, y_test, _ = read_feature_engineer_split(data_file_path)
 
-        # step 2. 
+        # step 2.
         print("Imputation based on location information")
         X_train_nan_cols = X_train_full.columns[X_train_full.isna().any()].tolist()
         X_train_full = pairwise_dist_imputer_catnum(X_train_full, nan_cols=X_train_nan_cols)
-        
+
         X_test_nan_cols = X_test.columns[X_test.isna().any()].tolist()
-        X_test = pairwise_dist_imputer_catnum(X_test, nan_cols=X_test_nan_cols)      
+        X_test = pairwise_dist_imputer_catnum(X_test, nan_cols=X_test_nan_cols)
 
         if encode_data:
-            # step 3. 
+            # step 3.
             print("Encoding")
-            X_encoder = OneHotEncoder(dtype=np.float64, sparse_output=False)
-            X_train_cat, X_train_num = col_processor.separate_to_cat_num(X_train_full)        
+            X_encoder = OneHotEncoder(dtype=np.float64, sparse=False)
+            X_train_cat, X_train_num = col_processor.separate_to_cat_num(X_train_full)
             X_test_cat, X_test_num = col_processor.separate_to_cat_num(X_test)
 
             X_train_cat_encoded = X_encoder.fit_transform(X_train_cat)
@@ -353,16 +357,16 @@ def data_preprocessing_pipeline(case_name, renew_data=False, encode_data=True, s
             y_test.loc[~damage_bool] = 0
             y_test.loc[damage_bool] = 1
 
-            # to save time reassign to encoded 
+            # to save time reassign to encoded
             y_train_encoded = y_train_full.astype(np.float64)
             y_test_encoded  = y_test.astype(np.float64)
             del y_train_full, y_test
 
         # step 5.
-        cols_drop  = ["LATITUDE", "LONGITUDE", "utm_easting", "utm_northing", "utm_zone", "Z"]
-        cols_scale = ["YEARBUILT", "SSD", "EMBER", "FLAME", "VSD", "X", "Y"]
+        cols_drop  = ["LATITUDE", "LONGITUDE", "utm_easting", "utm_northing", "utm_zone", "X", "Y", "Z"]
+        cols_scale = ["YEARBUILT", "SSD", "EMBER", "FLAME", "VSD"]
         cols_scale_name = [f"{c.lower()}_scaled" for c in cols_scale]
-        
+
         if scale_data:
             print("Normalize the required features and drop extra information!")
             for i, c in enumerate(cols_scale):
@@ -371,36 +375,41 @@ def data_preprocessing_pipeline(case_name, renew_data=False, encode_data=True, s
                     X_train_encoded[cols_scale_name[i]] = scaler.fit_transform(X_train_encoded[c].values.reshape(-1, 1))
                     X_test_encoded[cols_scale_name[i]]  = scaler.transform(X_test_encoded[c].values.reshape(-1, 1))
         else:
+            scaler = []
             print("No scaling is done for numerical data!")
-        
+
         # step 6. drop unnecessary columns
         cols_drop += cols_scale
         for i, c in enumerate(cols_drop):
             if c in X_train_encoded.columns.to_list():
                 X_train_encoded.drop(c, axis=1, inplace=True)
                 X_test_encoded.drop(c, axis=1, inplace=True)
-        
-        # step 7. write to disk                
+
+        # step 7. write to disk
         if encode_data:
             if task_type == "multiclass_classification":
-                data_dict = {"X_train": X_train_encoded, "X_test": X_test_encoded, 
+                data_dict = {"X_train": X_train_encoded, "X_test": X_test_encoded,
                             "y_train": y_train_encoded, "y_test": y_test_encoded,
-                            "X_encoder": X_encoder, "y_encoder": y_encoder}
-                
+                            "X_encoder": X_encoder, "y_encoder": y_encoder,
+                            "X_scaler" : scaler, "X_train_ori" : X_train_full, "X_test_ori": X_test}
+
             elif task_type == "binary":
-                data_dict = {"X_train": X_train_encoded, "X_test": X_test_encoded, 
+                data_dict = {"X_train": X_train_encoded, "X_test": X_test_encoded,
                             "y_train": y_train_encoded, "y_test": y_test_encoded,
-                            "X_encoder": X_encoder} 
+                            "X_encoder": X_encoder,
+                            "X_scaler" : scaler, "X_train_ori" : X_train_full, "X_test_ori": X_test}
         else:
             if task_type == "multiclass_classification":
-                data_dict = {"X_train": X_train_encoded, "X_test": X_test_encoded, 
+                data_dict = {"X_train": X_train_encoded, "X_test": X_test_encoded,
                             "y_train": y_train_encoded, "y_test": y_test_encoded,
-                            "y_encoder": y_encoder}
-                
+                            "y_encoder": y_encoder,
+                            "X_scaler" : scaler, "X_train_ori" : X_train_full, "X_test_ori": X_test}
+
             elif task_type == "binary":
-                data_dict = {"X_train": X_train_encoded, "X_test": X_test_encoded, 
-                            "y_train": y_train_encoded, "y_test": y_test_encoded} 
-        
+                data_dict = {"X_train": X_train_encoded, "X_test": X_test_encoded,
+                            "y_train": y_train_encoded, "y_test": y_test_encoded,
+                            "X_scaler" : scaler, "X_train_ori" : X_train_full, "X_test_ori": X_test}
+
         with open(fname, 'wb') as file:
             pickle.dump(data_dict, file)
     else:
@@ -414,7 +423,7 @@ def balance_classes(X, y, strategy="auto", k_neighbors=10, feature_type="mixed")
     """resample to balance class representation in dataset
 
     :param X: a dataframe of features
-    :param y: a dataframe of target classes which can be encoded 
+    :param y: a dataframe of target classes which can be encoded
     :param strategy: sampling strategy, defaults to "auto"
     :param k_neighbors: number of neighboring points, defaults to 10
     :param feature_type: boolean determining whether the features X

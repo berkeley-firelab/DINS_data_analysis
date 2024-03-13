@@ -47,6 +47,8 @@ if __name__ == "__main__":
     else:
         print("No class balancing is considered!")
 
+    # training estimators
+    print("Training started!")
     if len(y.shape) > 1:
         clf = logit_model(X, y, do_grid_search=est_dict["GRID_SEARCH"], save_path=SAVE_PATH)
     else:
