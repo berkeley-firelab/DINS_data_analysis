@@ -1,13 +1,15 @@
 {
-    "DATA_CASE" : "tubbs",
+    "DATA_CASE" : "Camp",
     "RENEW_DATA" : true,
-    "MIXED_TYPE" : true,
+    "FEATURE_TYPE" : "numeric",
+    "ENCODE_DATA" : true,
     "TASK_TYPE"  : "binary",
     "SCALE_DATA" : true,
     "WEIGHTED_CLASSES": false,
-    "DROP_COLS" : ["ZIPCODE"],
+    "BALANCE" : false,
     "BALANCE_STRATEGY" : "auto",
     "K_NS" : 10,
     "MODEL_TYPE": "logit",
-    "MODEL_VERSION": "v0"
+    "MODEL_VERSION": "v0",
+    "GRID_SEARCH" : true
 }

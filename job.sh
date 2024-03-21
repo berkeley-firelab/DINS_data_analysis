@@ -1,12 +1,12 @@
 #!/bin/bash
 
-#SBATCH --job-name=dins_gsII
-#SBATCH --output=dins_gsII.out
-#SBATCH --error=dins_gsII.err
+#SBATCH --job-name=lr_grid_search
+#SBATCH --output=lr_grid_search.out
+#SBATCH --error=lr_grid_search.err
 #SBATCH --partition=homaq
-#SBATCH --nodelist=homacs[3,4]
-#SBATCH --nodes=2
-#SBATCH --ntasks=128
+#SBATCH --nodelist=homacs[1]
+#SBATCH --nodes=1
+#SBATCH --ntasks=64
 #SBATCH --ntasks-per-core=1
 #SBATCH --mem=200G
 #SBATCH --time=120:00:00
