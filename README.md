@@ -1,6 +1,6 @@
 # DINS Data Preparation
 
-This repository contains scripts for data preprocessing and preparation, organized under the "preprocessing" workflow.
+This repository contains scripts for data preprocessing and analysis for Damage Inspection Data (DINS).
 
 ## Usage 
 
