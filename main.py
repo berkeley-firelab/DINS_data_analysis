@@ -3,7 +3,7 @@ import json
 
 from utils.directory_structure import DATA_DIR, OUTPUT_DIR
 from utils.preprocessing import data_preprocessing_pipeline, balance_classes
-from utils.estimator import logit_model
+from utils.estimator import logit_model, rf_model, xgb_model
 
 
 with open(os.path.join(DATA_DIR, "estimator_params.json")) as f:
@@ -49,7 +49,10 @@ if __name__ == "__main__":
 
     # training estimators
     print("Training started!")
-    if len(y.shape) > 1:
-        clf = logit_model(X, y, do_grid_search=est_dict["GRID_SEARCH"], save_path=SAVE_PATH)
-    else:
-        clf = logit_model(X, y.values.ravel(), do_grid_search=est_dict["GRID_SEARCH"], save_path=SAVE_PATH)
+    if len(y.shape) == 1:
+        y = y.values.ravel()
+    clf = logit_model(X, y, do_grid_search=est_dict["GRID_SEARCH"], save_path=SAVE_PATH)
+    #clf = rf_model(X, y, do_grid_search=est_dict["GRID_SEARCH"], save_path=SAVE_PATH)
+    #clf = xgb_model(X, y, do_grid_search=est_dict["GRID_SEARCH"], save_path=SAVE_PATH)
+    #clf = glm_model(X, y, do_grid_search=est_dict["GRID_SEARCH"], save_path=SAVE_PATH)
+

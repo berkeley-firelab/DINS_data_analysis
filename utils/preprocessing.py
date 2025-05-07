@@ -313,14 +313,14 @@ def data_preprocessing_pipeline(case_name, renew_data=False, encode_data=True, s
         if encode_data:
             # step 3.
             print("Encoding")
-            X_encoder = OneHotEncoder(dtype=np.float64, sparse=False)
+            X_encoder = OneHotEncoder(dtype=np.float64)
             X_train_cat, X_train_num = col_processor.separate_to_cat_num(X_train_full)
             X_test_cat, X_test_num = col_processor.separate_to_cat_num(X_test)
-
+            
             X_train_cat_encoded = X_encoder.fit_transform(X_train_cat)
             X_test_cat_encoded  = X_encoder.transform(X_test_cat)
-            X_train_cat_encoded = pd.DataFrame(X_train_cat_encoded, columns=X_encoder.get_feature_names_out().tolist(), index=X_train_full.index)
-            X_test_cat_encoded = pd.DataFrame(X_test_cat_encoded, columns=X_encoder.get_feature_names_out().tolist(), index=X_test.index)
+            X_train_cat_encoded = pd.DataFrame(X_train_cat_encoded.toarray(), columns=X_encoder.get_feature_names_out().tolist(), index=X_train_full.index)
+            X_test_cat_encoded = pd.DataFrame(X_test_cat_encoded.toarray(), columns=X_encoder.get_feature_names_out().tolist(), index=X_test.index)
             X_train_encoded = X_train_num.join(X_train_cat_encoded)
             X_test_encoded = X_test_num.join(X_test_cat_encoded)
 
