@@ -1,4 +1,4 @@
-# DINS Data Preparation
+# Damage Inspection (DINS) Data Analysis
 
 This repository contains scripts for data preprocessing and analysis for Damage Inspection Data (DINS).
 
