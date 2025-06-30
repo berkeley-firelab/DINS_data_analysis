@@ -36,13 +36,11 @@ All reusable workflows and helper functions live in the `utils/` folder.  These 
 
 | Module                          | Description                                                                                      |
 |---------------------------------|--------------------------------------------------------------------------------------------------|
-| `directory_structure.py`        | Defines standard project directories:`DATA_DIR`: where raw and intermediate data live,`OUTPUT_DIR`: where model outputs, figures, and results are written |   
-                                    
-                                                             
-| `preprocessing.py`              | Pipeline steps for data cleaning, imputation, scaling, encoding, and train/test splitting.      |
+| `directory_structure.py`        | Defines standard project directories:`DATA_DIR`: where raw and intermediate data live,`OUTPUT_DIR`: where model outputs, figures, and results are written |                     | `preprocessing.py`              | Pipeline steps for data cleaning, imputation, scaling, encoding, and train/test splitting.      |
 | `estimators.py`                 | Factory functions for instantiating and loading ML models from disk (e.g. `get_model()`).       |
 | `custom_encoder.py`             | Wraps scikit-learn encoders to handle mixed categorical/numerical data, and invert transformations. |
-| `helpers.py`                    | Miscellaneous utility functions (e.g. logging setup, JSON/YAML readers, environment checks).     |
+| `helpers.py`                    | Miscellaneous utility functions (e.g. logging setup, JSON/YAML readers, environment checks).     |                       
+
 
 ### Quick start: loading data, model, and interpreting SHAP
 
