@@ -97,7 +97,11 @@ jupyter notebook
 
 This will open the Jupyter interface in your default web browser, where you can navigate to the desired notebook and execute it.
 
+All of the result‐generation and manuscript‐figure workflows are contained in Jupyter notebooks.  The primary notebook for the paper is:
 
+- **Paper_Analysis.ipynb**  
+  Contains all of the figures, tables, and narrative analyses referenced in the manuscript.
+  
 ## data
 
 * `dins-2017-2022`: This is the original dataset containing string values.
