@@ -82,6 +82,7 @@ shap_values, X_test_orig = treat_encoded_shap_vals(
 # 7) Now you can plot or analyze:
 shap.plots.bar(shap_values)
 
+```
 Details about the pre-processing and data in the sections below.
 
 ### Analysis
