@@ -32,6 +32,7 @@ python main.py
 
 All reusable workflows and helper functions live in the `utils/` folder.  These modules simplify data loading, model retrieval, SHAP-value post-processing, and directory management.
 
+
 | Module                          | Description                                                                                      |
 |---------------------------------|--------------------------------------------------------------------------------------------------|
 | `directory_structure.py`        | Defines standard project directories:  
@@ -41,6 +42,7 @@ All reusable workflows and helper functions live in the `utils/` folder.  These 
 | `estimators.py`                 | Factory functions for instantiating and loading ML models from disk (e.g. `get_model()`).       |
 | `custom_encoder.py`             | Wraps scikit-learn encoders to handle mixed categorical/numerical data, and invert transformations. |
 | `helpers.py`                    | Miscellaneous utility functions (e.g. logging setup, JSON/YAML readers, environment checks).     |
+
 
 ### Quick start: loading data, model, and interpreting SHAP
 
