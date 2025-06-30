@@ -37,7 +37,7 @@ All reusable workflows and helper functions live in the `utils/` folder.  These 
 | Module                          | Description                                                                                      |
 |---------------------------------|--------------------------------------------------------------------------------------------------|
 | `directory_structure.py`        | Defines standard project directories:  
-                                    - `DATA_DIR`: where raw and intermediate data live  
+                                    - `DATA_DIR`: where raw and intermediate data live
                                     - `OUTPUT_DIR`: where model outputs, figures, and results are written                          |
 | `preprocessing.py`              | Pipeline steps for data cleaning, imputation, scaling, encoding, and train/test splitting.      |
 | `estimators.py`                 | Factory functions for instantiating and loading ML models from disk (e.g. `get_model()`).       |
