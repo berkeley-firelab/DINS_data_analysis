@@ -28,6 +28,60 @@ To initiate the training process, run the following command:
 python main.py
 ```
 
+## Utilities (`utils/`)
+
+All reusable workflows and helper functions live in the `utils/` folder.  These modules simplify data loading, model retrieval, SHAP-value post-processing, and directory management.
+
+| Module                          | Description                                                                                      |
+|---------------------------------|--------------------------------------------------------------------------------------------------|
+| `directory_structure.py`        | Defines standard project directories:  
+                                    - `DATA_DIR`: where raw and intermediate data live  
+                                    - `OUTPUT_DIR`: where model outputs, figures, and results are written                          |
+| `preprocessing.py`              | Pipeline steps for data cleaning, imputation, scaling, encoding, and train/test splitting.      |
+| `estimators.py`                 | Factory functions for instantiating and loading ML models from disk (e.g. `get_model()`).       |
+| `custom_encoder.py`             | Wraps scikit-learn encoders to handle mixed categorical/numerical data, and invert transformations. |
+| `helpers.py`                    | Miscellaneous utility functions (e.g. logging setup, JSON/YAML readers, environment checks).     |
+
+### Quick start: loading data, model, and interpreting SHAP
+
+```python
+import os, json, pickle
+import numpy as np, pandas as pd
+import shap
+from utils.directory_structure import DATA_DIR, OUTPUT_DIR
+from utils.estimators       import get_model, get_data
+from utils.helpers          import treat_encoded_shap_vals
+
+# 1) Load your experiment configuration
+with open(os.path.join(DATA_DIR, "estimator_params.json")) as f:
+    est_dict = json.load(f)
+
+# 2) Load pre-processed data
+data_dict = get_data(est_dict)
+X_train, y_train = data_dict["X_train"], data_dict["y_train"]
+X_test,  y_test  = data_dict["X_test"],  data_dict["y_test"]
+
+# 3) Load fitted model (from OUTPUT_DIR/<<MODEL_TYPE>>/)
+lr_gs = get_model(est_dict)["grid_search"]
+best_model = lr_gs.best_estimator_
+
+# 4) Define prediction functions for SHAP
+def model_log_odds(x):
+    proba = best_model.predict_log_proba(x)
+    return proba[:, 1] - proba[:, 0]
+
+# 5) Explain predictions on test set
+explainer        = shap.Explainer(model_log_odds, masker=X_test)
+shap_values_exp  = explainer(X_test)
+
+# 6) Adjust SHAP outputs to original categorical feature levels
+shap_values, X_test_orig = treat_encoded_shap_vals(
+    shap_values_exp, X_test, data_dict
+)
+
+# 7) Now you can plot or analyze:
+shap.plots.bar(shap_values)
+
 Details about the pre-processing and data in the sections below.
 
 ### Analysis
